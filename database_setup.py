@@ -61,3 +61,17 @@ def create_course_table():
                     course_name TEXT,
                     course_description TEXT
                     )''')
+
+
+def create_fee_table():
+    conn = sqlite3.connect("school_database.db")
+    cursor = conn.cursor()
+    cursor.execute('''CREATE TABLE IF NOT EXISTS fee_payments (
+                        payment_id INTEGER PRIMARY KEY,
+                        student_id INTEGER,
+                        amount REAL,
+                        payment_date DATE,
+                        payment_status TEXT,
+                        academic_year TEXT,
+                        FOREIGN KEY (student_id) REFERENCES students (student_id)
+                    )''')
