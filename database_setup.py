@@ -75,3 +75,29 @@ def create_fee_table():
                         academic_year TEXT,
                         FOREIGN KEY (student_id) REFERENCES students (student_id)
                     )''')
+
+
+def create_student_notice_table():
+    conn = sqlite3.connect("school_database.db")
+    cursor = conn.cursor()
+    cursor.execute('''CREATE TABLE IF NOT EXISTS student_notice (
+                        stud_notice_id INTEGER PRIMARY KEY,
+                        student_id INTEGER,
+                        title TEXT,
+                        publish_date DATE,
+                        content TEXT,
+                        FOREIGN KEY (student_id) REFERENCES students (student_id)
+                    )''')
+
+
+def create_employee_notice_table():
+    conn = sqlite3.connect("school_database.db")
+    cursor = conn.cursor()
+    cursor.execute('''CREATE TABLE IF NOT EXISTS student_notice (
+                        emp_notice_id INTEGER PRIMARY KEY,
+                        employee_id INTEGER,
+                        title TEXT,
+                        publish_date DATE,
+                        content TEXT,
+                        FOREIGN KEY (employee_id) REFERENCES employees (employee_id)
+                    )''')
