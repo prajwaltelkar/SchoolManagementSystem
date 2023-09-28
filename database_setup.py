@@ -84,8 +84,8 @@ def create_student_notice_table():
                         stud_notice_id INTEGER PRIMARY KEY,
                         student_id INTEGER,
                         title TEXT,
+                        content TEXT
                         publish_date DATE,
-                        content TEXT,
                         FOREIGN KEY (student_id) REFERENCES students (student_id)
                     )''')
 
@@ -93,11 +93,11 @@ def create_student_notice_table():
 def create_employee_notice_table():
     conn = sqlite3.connect("school_database.db")
     cursor = conn.cursor()
-    cursor.execute('''CREATE TABLE IF NOT EXISTS student_notice (
+    cursor.execute('''CREATE TABLE IF NOT EXISTS employee_notice (
                         emp_notice_id INTEGER PRIMARY KEY,
                         employee_id INTEGER,
                         title TEXT,
-                        publish_date DATE,
                         content TEXT,
+                        publish_date DATE,
                         FOREIGN KEY (employee_id) REFERENCES employees (employee_id)
                     )''')
