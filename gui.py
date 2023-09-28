@@ -5,8 +5,9 @@ from classroom import ClassRoom
 from course import Course
 from employee import Employee
 from fee import Fee, show_fee_records, delete_all_fee_records
-from database_setup import (create_fee_table, create_student_table, create_course_table, create_class_table,
-                            create_employee_table)
+from notice import StudentNotice, show_student_notice_records, delete_all_student_notice_records
+from database_setup import (create_student_notice_table, create_student_table, create_course_table, create_class_table,
+                            create_employee_table, create_employee_notice_table)
 
 
 class LoginPage:
@@ -64,7 +65,7 @@ class LoginPage:
         create_student_table()
         create_course_table()
         create_employee_table()
-        create_fee_table()
+        create_student_notice_table()
 
         # Create a new window for the admin interface
         self.admin_window = tk.Toplevel()
@@ -95,7 +96,7 @@ class LoginPage:
         update_fee_button = tk.Button(self.admin_window, text="Update Fee Payment Status", command=Fee)
         update_fee_button.pack()
 
-        send_notice_button = tk.Button(self.admin_window, text="Send Notice")
+        send_notice_button = tk.Button(self.admin_window, text="Send Notice to Student", command=StudentNotice)
         send_notice_button.pack()
 
         # Create a button to show student records
@@ -115,6 +116,16 @@ class LoginPage:
         delete_all_fee_records_button = tk.Button(self.admin_window, text="Delete All Student Fee Records",
                                                   command=delete_all_fee_records)
         delete_all_fee_records_button.pack()
+
+        # Create a button to show student notice records
+        show_student_notice_records_button = tk.Button(self.admin_window, text="Show Student Notice Records",
+                                                       command=show_student_notice_records)
+        show_student_notice_records_button.pack()
+
+        delete_all_student_notice_records_button = tk.Button(self.admin_window, text="Delete All Student Notice"
+                                                                                     " Records",
+                                                             command=delete_all_student_notice_records)
+        delete_all_student_notice_records_button.pack()
 
         def admin_logout():
             if messagebox.askokcancel("Logout", "Do you want to logout?"):
