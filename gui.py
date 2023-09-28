@@ -8,7 +8,7 @@ from fee import Fee, show_fee_records, delete_all_fee_records
 from notice import (StudentNotice, EmployeeNotice, show_student_notice_records, delete_all_student_notice_records,
                     show_employee_notice_records, delete_all_employee_notice_records)
 from database_setup import (create_student_notice_table, create_student_table, create_course_table, create_class_table,
-                            create_employee_table, create_employee_notice_table)
+                            create_employee_table, create_employee_notice_table, create_fee_table)
 
 
 class LoginPage:
@@ -68,6 +68,8 @@ class LoginPage:
         create_employee_table()
         create_student_notice_table()
         create_employee_notice_table()
+        create_fee_table()
+
 
         # Create a new window for the admin interface
         self.admin_window = tk.Toplevel()

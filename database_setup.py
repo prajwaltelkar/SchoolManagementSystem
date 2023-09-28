@@ -1,6 +1,18 @@
 import sqlite3
 
 
+# Create a table to store class information
+def create_class_table():
+    conn = sqlite3.connect("school_database.db")
+    cursor = conn.cursor()
+    cursor.execute('''CREATE TABLE IF NOT EXISTS class (
+                    class_id INTEGER PRIMARY KEY,
+                    class_name TEXT
+                    )''')
+    conn.commit()
+    conn.close()
+
+
 def create_student_table():
     conn = sqlite3.connect("school_database.db")
     cursor = conn.cursor()
@@ -15,8 +27,9 @@ def create_student_table():
                     father_name TEXT,
                     mother_name TEXT,
                     enrollment_date DATE,
-                    age INTEGER,
-                    gender TEXT
+                    gender TEXT,
+                    class_id INTEGER,
+                    FOREIGN KEY (class_id) REFERENCES class(class_id)
                     )''')
 
     conn.commit()
@@ -35,18 +48,6 @@ def create_employee_table():
                     address TEXT,
                     contact_number TEXT,
                     role TEXT
-                    )''')
-    conn.commit()
-    conn.close()
-
-
-# Create a table to store class information
-def create_class_table():
-    conn = sqlite3.connect("school_database.db")
-    cursor = conn.cursor()
-    cursor.execute('''CREATE TABLE IF NOT EXISTS class (
-                    class_id INTEGER PRIMARY KEY,
-                    class_name TEXT
                     )''')
     conn.commit()
     conn.close()

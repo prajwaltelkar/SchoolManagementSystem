@@ -57,15 +57,15 @@ class Student:
         self.enrollment_date_entry = tk.Entry(self.student_window)
         self.enrollment_date_entry.pack()
 
-        self.age_label = tk.Label(self.student_window, text="Age:")
-        self.age_label.pack()
-        self.age_entry = tk.Entry(self.student_window)
-        self.age_entry.pack()
-
         self.gender_label = tk.Label(self.student_window, text="Gender:")
         self.gender_label.pack()
         self.gender_entry = tk.Entry(self.student_window)
         self.gender_entry.pack()
+
+        self.class_id_label = tk.Label(self.student_window, text="Class ID:")
+        self.class_id_label.pack()
+        self.class_id_entry = tk.Entry(self.student_window)
+        self.class_id_entry.pack()
 
         # Create the "Save" button and bind it to the save_student method
         self.save_button = tk.Button(self.student_window, text="Save", command=self.save_student)
@@ -82,8 +82,8 @@ class Student:
         father_name = self.father_name_entry.get()
         mother_name = self.mother_name_entry.get()
         enrollment_date = self.enrollment_date_entry.get()
-        age = self.age_entry.get()
         gender = self.gender_entry.get()
+        class_id = self.class_id_entry.get()
 
         # Insert student information into the database
         conn = sqlite3.connect("school_database.db")
@@ -91,10 +91,10 @@ class Student:
 
         cursor.execute('''INSERT INTO students (
                             student_id, first_name, last_name, dob, address, contact_number, 
-                            father_name, mother_name, enrollment_date, age, gender
-                        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?,?)''',
+                            father_name, mother_name, enrollment_date, gender, class_id
+                        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)''',
                        (student_id, first_name, last_name, dob, address, contact_number,
-                        father_name, mother_name, enrollment_date, age, gender))
+                        father_name, mother_name, enrollment_date, gender, class_id))
 
         conn.commit()
         conn.close()
@@ -113,7 +113,7 @@ def show_student_records():
     tree = ttk.Treeview(records_window, columns=("Student ID", "First Name", "Last Name", "DOB", "Address",
                                                  "Contact Number", "Father Name", "Mother Name",
                                                  "Enrollment Date",
-                                                 "Age", "Gender"))
+                                                 "Gender", "Class ID"))
     tree.heading("#0", text="Student Records")
     tree.heading("#1", text="Student ID")
     tree.heading("#2", text="First Name")
@@ -124,8 +124,8 @@ def show_student_records():
     tree.heading("#7", text="Father Name")
     tree.heading("#8", text="Mother Name")
     tree.heading("#9", text="Enrollment Date")
-    tree.heading("#10", text="Age")
-    tree.heading("#11", text="Gender")
+    tree.heading("#10", text="Gender")
+    tree.heading("#11", text="Class ID")
 
     # Create horizontal scrollbar
     xscroll = ttk.Scrollbar(records_window, orient=tk.HORIZONTAL, command=tree.xview)
