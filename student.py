@@ -11,6 +11,11 @@ class Student:
         self.student_window.title("Register Student")
 
         # Create and pack entry fields for student attributes
+        self.student_id_label = tk.Label(self.student_window, text="Student ID:")
+        self.student_id_label.pack()
+        self.student_id_entry = tk.Entry(self.student_window)
+        self.student_id_entry.pack()
+
         self.first_name_label = tk.Label(self.student_window, text="First Name:")
         self.first_name_label.pack()
         self.first_name_entry = tk.Entry(self.student_window)
@@ -68,6 +73,7 @@ class Student:
 
     def save_student(self):
         # Retrieve data from entry fields
+        student_id = self.student_id_entry.get()
         first_name = self.first_name_entry.get()
         last_name = self.last_name_entry.get()
         dob = self.dob_entry.get()
@@ -84,10 +90,10 @@ class Student:
         cursor = conn.cursor()
 
         cursor.execute('''INSERT INTO students (
-                            first_name, last_name, dob, address, contact_number, 
+                            student_id, first_name, last_name, dob, address, contact_number, 
                             father_name, mother_name, enrollment_date, age, gender
-                        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)''',
-                       (first_name, last_name, dob, address, contact_number,
+                        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?,?)''',
+                       (student_id, first_name, last_name, dob, address, contact_number,
                         father_name, mother_name, enrollment_date, age, gender))
 
         conn.commit()

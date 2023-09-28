@@ -2,6 +2,7 @@ import sqlite3
 import tkinter as tk
 from tkinter import messagebox
 
+
 class Employee:
     def __init__(self):
         # Create a new window for employee registration
@@ -49,7 +50,6 @@ class Employee:
         self.save_button.pack()
 
     def save_employee(self):
-
         employee_id = self.employee_id_entry.get()
         first_name = self.first_name_entry.get()
         last_name = self.last_name_entry.get()
