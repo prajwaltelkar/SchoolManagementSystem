@@ -102,3 +102,14 @@ def create_employee_notice_table():
                         publish_date DATE,
                         FOREIGN KEY (employee_id) REFERENCES employees (employee_id)
                     )''')
+
+
+def create_attendance_table():
+    conn = sqlite3.connect("school_database.db")
+    cursor = conn.cursor()
+    cursor.execute('''CREATE TABLE IF NOT EXISTS attendance (
+                            student_id INTEGER,
+                            date DATE,
+                            status TEXT,
+                            FOREIGN KEY (student_id) REFERENCES students (student_id)
+                        )''')

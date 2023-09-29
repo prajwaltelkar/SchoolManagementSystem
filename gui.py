@@ -8,7 +8,9 @@ from fee import Fee, show_fee_records, delete_all_fee_records
 from notice import (StudentNotice, EmployeeNotice, show_student_notice_records, delete_all_student_notice_records,
                     show_employee_notice_records, delete_all_employee_notice_records)
 from database_setup import (create_student_notice_table, create_student_table, create_course_table, create_class_table,
-                            create_employee_table, create_employee_notice_table, create_fee_table)
+                            create_employee_table, create_employee_notice_table, create_fee_table,
+                            create_attendance_table)
+from attendance import AttendanceSystem, AttendanceViewer, show_attendance_records
 
 
 class LoginPage:
@@ -51,12 +53,15 @@ class LoginPage:
             messagebox.showinfo("Login Successful", "Welcome, Admin!")
             self.open_admin_page()
         elif role == "Student" and username == "student" and password == "studentpassword":
+            self.root.withdraw()
             # Student functionality
             messagebox.showinfo("Login Successful", "Welcome, Student!")
             # Add student functionality here
-        elif role == "Staff" and username == "staff" and password == "staffpassword":
+        elif role == "Staff" and username == "" and password == "":
+            self.root.withdraw()
             # Staff functionality
             messagebox.showinfo("Login Successful", "Welcome, Staff!")
+            self.open_staff_page()
             # Add staff functionality here
         else:
             messagebox.showerror("Login Failed", "Invalid credentials")
@@ -69,7 +74,6 @@ class LoginPage:
         create_student_notice_table()
         create_employee_notice_table()
         create_fee_table()
-
 
         # Create a new window for the admin interface
         self.admin_window = tk.Toplevel()
@@ -144,8 +148,17 @@ class LoginPage:
                                                               command=delete_all_employee_notice_records)
         delete_all_employee_notice_records_button.pack()
 
+        # Create buttons for attendance viewer
+        attendance_view_button = tk.Button(self.admin_window, text="Attendance Viewer", command=AttendanceViewer)
+        attendance_view_button.pack()
+
+        # Create a button to show student notice records
+        show_attendance_records_button = tk.Button(self.admin_window, text="Show Complete Attendance Records",
+                                                   command=show_attendance_records)
+        show_attendance_records_button.pack()
+
         def admin_logout():
-            if messagebox.askokcancel("Logout", "Do you want to logout?"):
+            if messagebox.askokcancel("Logout", "Do you want to logout from admin?"):
                 # Close the admin window
                 self.admin_window.destroy()
                 self.root.deiconify()
@@ -159,7 +172,7 @@ class LoginPage:
                                    self.on_admin_window_closing)  # Handle admin_window close event
 
     def on_admin_window_closing(self):
-        if messagebox.askokcancel("Logout", "Do you want to quit?"):
+        if messagebox.askokcancel("Logout", "Do you want to quit from admin?"):
             # Close the admin window
             self.admin_window.destroy()
             self.root.deiconify()
@@ -171,10 +184,49 @@ class LoginPage:
     #
     #     # You can use the existing class modules and functionalities for student actions here.
     #
-    # def open_staff_page(self):
-    #     # Create a staff GUI window or navigate to the staff actions
-    #
-    #     # You can use the existing class modules and functionalities for staff actions here.
+    def open_staff_page(self):
+        # Create a staff GUI window or navigate to the staff actions
+        create_attendance_table()
+
+        # Create a new window for the admin interface
+        self.employee_window = tk.Toplevel()
+        self.employee_window.title("Employee Dashboard")
+
+        # Create buttons for attendance
+        attendance_button = tk.Button(self.employee_window, text="Attendance", command=AttendanceSystem)
+        attendance_button.pack()
+
+        # Create buttons for attendance viewer
+        attendance_view_button = tk.Button(self.employee_window, text="Attendance Viewer", command=AttendanceViewer)
+        attendance_view_button.pack()
+
+        # Create a button to show student notice records
+        show_attendance_records_button = tk.Button(self.employee_window, text="Show Complete Attendance Records",
+                                                   command=show_attendance_records)
+        show_attendance_records_button.pack()
+
+        # You can use the existing class modules and functionalities for staff actions here.
+        def employee_logout():
+            if messagebox.askokcancel("Logout", "Do you want to logout from employee?"):
+                # Close the admin window
+                self.employee_window.destroy()
+                self.root.deiconify()
+
+        logout_button = tk.Button(self.employee_window, text="Logout", command=employee_logout)
+        logout_button.pack()
+        self.username_entry.delete(0, tk.END)
+        self.password_entry.delete(0, tk.END)
+
+        self.employee_window.protocol("WM_DELETE_WINDOW",
+                                      self.on_employee_window_closing)  # Handle admin_window close event
+
+    def on_employee_window_closing(self):
+        if messagebox.askokcancel("Logout", "Do you want to quit from employee?"):
+            # Close the admin window
+            self.employee_window.destroy()
+            self.root.deiconify()
+            self.username_entry.delete(0, tk.END)
+            self.password_entry.delete(0, tk.END)
 
 
 def main():
