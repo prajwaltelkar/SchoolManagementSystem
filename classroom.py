@@ -1,5 +1,7 @@
 import sqlite3
+from tkinter import ttk
 import tkinter as tk
+import tkinter.font as tkfont
 from tkinter import messagebox
 
 
@@ -8,7 +10,7 @@ class ClassRoom:
         self.class_window = tk.Toplevel()
         self.class_window.title("Create Class")
 
-        # Create and pack entry fields for employee attributes
+        # Create and pack entry fields for class attributes
         self.class_id_label = tk.Label(self.class_window, text="Class ID")
         self.class_id_label.pack()
         self.class_id_entry = tk.Entry(self.class_window)
@@ -30,9 +32,7 @@ class ClassRoom:
         class_id = self.class_id_entry.get()
         class_name = self.class_name_entry.get()
 
-        cursor.execute('''INSERT INTO class (
-                            class_id, class_name
-                        ) VALUES (?, ?)''',
+        cursor.execute("INSERT INTO class (class_id, class_name) VALUES (?, ?)",
                        (class_id, class_name))
 
         conn.commit()
@@ -41,28 +41,47 @@ class ClassRoom:
         self.class_window.destroy()
         messagebox.showinfo("Successful", "Class Created!")
 
-    @staticmethod
-    def get_all_classes():
+
+def show_class_records():
+    # Create a new window for displaying records
+    class_records_window = tk.Toplevel()
+    class_records_window.title("Class Database")
+
+    # Create a treeview widget to display records
+    tree = ttk.Treeview(class_records_window, columns=("Class ID", "Class Name"))
+    tree.heading("#0", text="Class Record")
+    tree.heading("#1", text="Class ID")
+    tree.heading("#2", text="Class Name")
+
+    # Create horizontal scrollbar
+    xscroll = ttk.Scrollbar(class_records_window, orient=tk.HORIZONTAL, command=tree.xview)
+    xscroll.pack(side=tk.BOTTOM, fill=tk.X)
+    tree.configure(xscrollcommand=xscroll.set)
+
+    # Fetch Class records from the database
+    conn = sqlite3.connect("school_database.db")
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM class")
+    class_records = cursor.fetchall()
+    conn.close()
+
+    # Insert Class records into the treeview
+    for record in class_records:
+        tree.insert("", "end", values=record)
+
+    # Adjust column widths based on content
+    for col in tree["columns"]:
+        tree.column(col, width=tkfont.Font().measure(col) + 10)  # Adjust the width as needed
+
+    tree.pack(fill=tk.BOTH, expand=True)
+
+
+def delete_all_class_records():
+    confirmation = messagebox.askquestion("Delete All Records",
+                                          "Are you sure you want to delete all Class records?")
+    if confirmation == 'yes':
         conn = sqlite3.connect("school_database.db")
         cursor = conn.cursor()
-
-        cursor.execute("SELECT * FROM class")
-        classes = cursor.fetchall()
-
-        conn.close()
-        return classes
-
-    @staticmethod
-    def delete_class(class_id):
-        conn = sqlite3.connect("school_database.db")
-        cursor = conn.cursor()
-
-        cursor.execute("DELETE FROM class WHERE class_id = ?", (class_id,))
-
+        cursor.execute("DELETE FROM class")
         conn.commit()
-        conn.close()
-
-
-def create_class():
-    # Create a new instance of StudentRegistrationPage for registering students
-    create_class_page = ClassRoom
+        messagebox.showinfo("Deletion Successful", "All Class records have been deleted.")

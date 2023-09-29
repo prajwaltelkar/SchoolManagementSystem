@@ -1,5 +1,7 @@
 import sqlite3
 import tkinter as tk
+from tkinter import ttk
+import tkinter.font as tkfont
 from tkinter import messagebox
 
 
@@ -45,7 +47,7 @@ class Employee:
         self.role_entry = tk.Entry(self.employee_window)
         self.role_entry.pack()
 
-        # Create the "Save" button and bind it to the save_student method
+        # Create the "Save" button and bind it to the save_employee method
         self.save_button = tk.Button(self.employee_window, text="Save", command=self.save_employee)
         self.save_button.pack()
 
@@ -73,23 +75,53 @@ class Employee:
         conn.commit()
         conn.close()
 
-    @staticmethod
-    def get_all_employees():
+
+def show_employee_records():
+    # Create a new window for displaying records
+    records_window = tk.Toplevel()
+    records_window.title("Employee Database")
+
+    # Create a treeview widget to display records
+    tree = ttk.Treeview(records_window, columns=("Employee ID", "First Name", "Last Name", "DOB", "Address",
+                                                 "Contact Number", "Role"))
+    tree.heading("#0", text="Employee Records")
+    tree.heading("#1", text="Employee ID")
+    tree.heading("#2", text="First Name")
+    tree.heading("#3", text="Last Name")
+    tree.heading("#4", text="Date of Birth")
+    tree.heading("#5", text="Address")
+    tree.heading("#6", text="Contact Number")
+    tree.heading("#7", text="Role")
+
+    # Create horizontal scrollbar
+    xscroll = ttk.Scrollbar(records_window, orient=tk.HORIZONTAL, command=tree.xview)
+    xscroll.pack(side=tk.BOTTOM, fill=tk.X)
+    tree.configure(xscrollcommand=xscroll.set)
+
+    # Fetch employee records from the database
+    conn = sqlite3.connect("school_database.db")
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM employees")
+    employee_records = cursor.fetchall()
+    conn.close()
+
+    # Insert employee records into the treeview
+    for record in employee_records:
+        tree.insert("", "end", values=record)
+
+    # Adjust column widths based on content
+    for col in tree["columns"]:
+        tree.column(col, width=tkfont.Font().measure(col) + 10)  # Adjust the width as needed
+
+    tree.pack(fill=tk.BOTH, expand=True)
+
+
+def delete_all_employee_records():
+    confirmation = messagebox.askquestion("Delete All Records",
+                                          "Are you sure you want to delete all employee records?")
+    if confirmation == 'yes':
         conn = sqlite3.connect("school_database.db")
         cursor = conn.cursor()
-
-        cursor.execute("SELECT * FROM employees")
-        employees = cursor.fetchall()
-
-        conn.close()
-        return employees
-
-    @staticmethod
-    def delete_employee(employee_id):
-        conn = sqlite3.connect("school_database.db")
-        cursor = conn.cursor()
-
-        cursor.execute("DELETE FROM employees WHERE employee_id = ?", (employee_id,))
-
+        cursor.execute("DELETE FROM employees")
         conn.commit()
-        conn.close()
+        messagebox.showinfo("Deletion Successful", "All employee records have been deleted.")

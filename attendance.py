@@ -2,6 +2,7 @@ import tkinter as tk
 from tkinter import ttk
 import sqlite3
 import tkinter.font as tkfont
+from tkinter import messagebox
 
 
 class AttendanceSystem:
@@ -48,7 +49,7 @@ class AttendanceSystem:
         self.load_students_button.grid(row=3, column=0, columnspan=5)
 
         # Create a label for marking attendance
-        self.attendance_label = tk.Label(self.attendance_window, text="Mark Attendance after selecting the status:")
+        self.attendance_label = tk.Label(self.attendance_window, text="Mark Attendance after selecting the student:")
         self.attendance_label.grid(row=4, column=0)
 
         # Create a variable to store the attendance status (Present/Absent)
@@ -145,7 +146,8 @@ class AttendanceViewer:
         selected_date = self.date_var.get()
 
         class_id = self.cursor.execute("SELECT class_id FROM class WHERE class_name=?", (selected_class,)).fetchone()[0]
-        attendance_data = self.cursor.execute("SELECT students.first_name, students.last_name, attendance.status FROM students JOIN attendance ON students.student_id = attendance.student_id WHERE students.class_id=? AND attendance.date=?",
+        attendance_data = self.cursor.execute(
+            "SELECT students.first_name, students.last_name, attendance.status FROM students JOIN attendance ON students.student_id = attendance.student_id WHERE students.class_id=? AND attendance.date=?",
             (class_id, selected_date)).fetchall()
 
         # Create a new tkinter window to display attendance
@@ -198,3 +200,14 @@ def show_attendance_records():
         tree.column(col, width=tkfont.Font().measure(col) + 10)  # Adjust the width as needed
 
     tree.pack(fill=tk.BOTH, expand=True)
+
+
+def delete_all_attendance_records():
+    confirmation = messagebox.askquestion("Delete All Records",
+                                          "Are you sure you want to delete all Attendance records?")
+    if confirmation == 'yes':
+        conn = sqlite3.connect("school_database.db")
+        cursor = conn.cursor()
+        cursor.execute("DELETE FROM attendance")
+        conn.commit()
+        messagebox.showinfo("Deletion Successful", "All Attendance records have been deleted.")

@@ -1,16 +1,17 @@
 import tkinter as tk
 from tkinter import messagebox
 from student import Student, show_student_records, delete_all_student_records
-from classroom import ClassRoom
-from course import Course
-from employee import Employee
+from classroom import ClassRoom, show_class_records, delete_all_class_records
+from course import Course, show_course_records, delete_all_course_records
+from employee import Employee, show_employee_records, delete_all_employee_records
 from fee import Fee, show_fee_records, delete_all_fee_records
 from notice import (StudentNotice, EmployeeNotice, show_student_notice_records, delete_all_student_notice_records,
                     show_employee_notice_records, delete_all_employee_notice_records)
 from database_setup import (create_student_notice_table, create_student_table, create_course_table, create_class_table,
                             create_employee_table, create_employee_notice_table, create_fee_table,
-                            create_attendance_table)
-from attendance import AttendanceSystem, AttendanceViewer, show_attendance_records
+                            create_attendance_table, create_class_courses_table)
+from attendance import AttendanceSystem, AttendanceViewer, show_attendance_records, delete_all_attendance_records
+from common_util import ClassCourses, show_class_courses_records, delete_all_class_courses_records
 
 
 class LoginPage:
@@ -74,6 +75,7 @@ class LoginPage:
         create_student_notice_table()
         create_employee_notice_table()
         create_fee_table()
+        create_class_courses_table()
 
         # Create a new window for the admin interface
         self.admin_window = tk.Toplevel()
@@ -89,17 +91,11 @@ class LoginPage:
         create_course_button = tk.Button(self.admin_window, text="Create Course", command=Course)
         create_course_button.pack()
 
+        register_class_courses_button = tk.Button(self.admin_window, text="Register Courses to Class", command=ClassCourses)
+        register_class_courses_button.pack()
+
         register_employee_button = tk.Button(self.admin_window, text="Register Employee", command=Employee)
         register_employee_button.pack()
-
-        assign_teacher_class_button = tk.Button(self.admin_window, text="Assign Teacher to Class")
-        assign_teacher_class_button.pack()
-
-        assign_teacher_course_button = tk.Button(self.admin_window, text="Assign Teacher to a Course")
-        assign_teacher_course_button.pack()
-
-        assign_course_to_class_button = tk.Button(self.admin_window, text="Assign Course to Class")
-        assign_course_to_class_button.pack()
 
         update_fee_button = tk.Button(self.admin_window, text="Update Fee Payment Status", command=Fee)
         update_fee_button.pack()
@@ -114,16 +110,46 @@ class LoginPage:
         show_stud_records_button = tk.Button(self.admin_window, text="Show Student Records",
                                              command=show_student_records)
         show_stud_records_button.pack()
-
         delete_all_stud_records_button = tk.Button(self.admin_window, text="Delete All Student Records",
                                                    command=delete_all_student_records)
         delete_all_stud_records_button.pack()
+
+        # Create a button to show employee records
+        show_employee_records_button = tk.Button(self.admin_window, text="Show Employee Records",
+                                                 command=show_employee_records)
+        show_employee_records_button.pack()
+        delete_all_employee_records_button = tk.Button(self.admin_window, text="Delete All Employee Records",
+                                                       command=delete_all_employee_records)
+        delete_all_employee_records_button.pack()
+
+        # Create a button to show class records
+        show_class_records_button = tk.Button(self.admin_window, text="Show Class Records",
+                                              command=show_class_records)
+        show_class_records_button.pack()
+        delete_all_class_records_button = tk.Button(self.admin_window, text="Delete All Class Records",
+                                                    command=delete_all_class_records)
+        delete_all_class_records_button.pack()
+
+        # Create a button to show course records
+        show_course_records_button = tk.Button(self.admin_window, text="Show Course Records",
+                                               command=show_course_records)
+        show_course_records_button.pack()
+        delete_all_course_records_button = tk.Button(self.admin_window, text="Delete All Course Records",
+                                                     command=delete_all_course_records)
+        delete_all_course_records_button.pack()
+
+        # Create a button to show class_courses records
+        show_class_courses_records_button = tk.Button(self.admin_window, text="Show Class-Course Records",
+                                                      command=show_class_courses_records)
+        show_class_courses_records_button.pack()
+        delete_all_class_courses_records_button = tk.Button(self.admin_window, text="Delete All Class-Course Records",
+                                                            command=delete_all_class_courses_records)
+        delete_all_class_courses_records_button.pack()
 
         # Create a button to show fee records
         show_fee_records_button = tk.Button(self.admin_window, text="Show Student Fee Records",
                                             command=show_fee_records)
         show_fee_records_button.pack()
-
         delete_all_fee_records_button = tk.Button(self.admin_window, text="Delete All Student Fee Records",
                                                   command=delete_all_fee_records)
         delete_all_fee_records_button.pack()
@@ -132,7 +158,6 @@ class LoginPage:
         show_student_notice_records_button = tk.Button(self.admin_window, text="Show Student Notice Records",
                                                        command=show_student_notice_records)
         show_student_notice_records_button.pack()
-
         delete_all_student_notice_records_button = tk.Button(self.admin_window, text="Delete All Student Notice"
                                                                                      " Records",
                                                              command=delete_all_student_notice_records)
@@ -142,7 +167,6 @@ class LoginPage:
         show_employee_notice_records_button = tk.Button(self.admin_window, text="Show Employee Notice Records",
                                                         command=show_employee_notice_records)
         show_employee_notice_records_button.pack()
-
         delete_all_employee_notice_records_button = tk.Button(self.admin_window, text="Delete All Employee Notice"
                                                                                       " Records",
                                                               command=delete_all_employee_notice_records)
@@ -152,10 +176,13 @@ class LoginPage:
         attendance_view_button = tk.Button(self.admin_window, text="Attendance Viewer", command=AttendanceViewer)
         attendance_view_button.pack()
 
-        # Create a button to show student notice records
+        # Create a button to show attendance records
         show_attendance_records_button = tk.Button(self.admin_window, text="Show Complete Attendance Records",
                                                    command=show_attendance_records)
         show_attendance_records_button.pack()
+        delete_all_attendance_records_button = tk.Button(self.admin_window, text="Delete All Attendance Records",
+                                                         command=delete_all_attendance_records)
+        delete_all_attendance_records_button.pack()
 
         def admin_logout():
             if messagebox.askokcancel("Logout", "Do you want to logout from admin?"):

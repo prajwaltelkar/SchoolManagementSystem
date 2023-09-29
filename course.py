@@ -1,5 +1,7 @@
 import sqlite3
 import tkinter as tk
+from tkinter import ttk
+import tkinter.font as tkfont
 from tkinter import messagebox
 
 
@@ -9,7 +11,7 @@ class Course:
         self.course_window = tk.Toplevel()
         self.course_window.title("Create course")
 
-        # Create and pack entry fields for employee attributes
+        # Create and pack entry fields for course attributes
         course_id_label = tk.Label(self.course_window, text="Course ID")
         course_id_label.pack()
         self.course_id_entry = tk.Entry(self.course_window)
@@ -25,6 +27,11 @@ class Course:
         self.course_description_entry = tk.Entry(self.course_window)
         self.course_description_entry.pack()
 
+        employee_id_label = tk.Label(self.course_window, text="Employee ID:")
+        employee_id_label.pack()
+        self.employee_id_entry = tk.Entry(self.course_window)
+        self.employee_id_entry.pack()
+
         # Create the "Save" button and bind it to the save_student method
         self.save_button = tk.Button(self.course_window, text="Save", command=self.save_course)
         self.save_button.pack()
@@ -36,11 +43,12 @@ class Course:
         course_id = self.course_id_entry.get()
         course_name = self.course_name_entry.get()
         course_description = self.course_description_entry.get()
+        employee_id = self.employee_id_entry.get()
 
         cursor.execute('''INSERT INTO course (
-                            course_id, course_name, course_description
-                        ) VALUES (?, ?, ?)''',
-                       (course_id, course_name, course_description))
+                            course_id, course_name, course_description, employee_id
+                        ) VALUES (?, ?, ?, ?)''',
+                       (course_id, course_name, course_description, employee_id))
 
         self.course_window.destroy()
         messagebox.showinfo("Successful", "Course Created!")
@@ -48,23 +56,49 @@ class Course:
         conn.commit()
         conn.close()
 
-    @staticmethod
-    def get_all_courses():
+
+def show_course_records():
+    # Create a new window for displaying records
+    course_records_window = tk.Toplevel()
+    course_records_window.title("Course Database")
+
+    # Create a treeview widget to display records
+    tree = ttk.Treeview(course_records_window, columns=("Course ID", "Course Name", "Course Description", "Employee ID"))
+    tree.heading("#0", text="Course Record")
+    tree.heading("#1", text="Course ID")
+    tree.heading("#2", text="Course Name")
+    tree.heading("#3", text="Course Description")
+    tree.heading("#4", text="Employee ID")
+
+    # Create horizontal scrollbar
+    xscroll = ttk.Scrollbar(course_records_window, orient=tk.HORIZONTAL, command=tree.xview)
+    xscroll.pack(side=tk.BOTTOM, fill=tk.X)
+    tree.configure(xscrollcommand=xscroll.set)
+
+    # Fetch Employee records from the database
+    conn = sqlite3.connect("school_database.db")
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM course")
+    employee_records = cursor.fetchall()
+    conn.close()
+
+    # Insert Employee records into the treeview
+    for record in employee_records:
+        tree.insert("", "end", values=record)
+
+    # Adjust column widths based on content
+    for col in tree["columns"]:
+        tree.column(col, width=tkfont.Font().measure(col) + 10)  # Adjust the width as needed
+
+    tree.pack(fill=tk.BOTH, expand=True)
+
+
+def delete_all_course_records():
+    confirmation = messagebox.askquestion("Delete All Records",
+                                          "Are you sure you want to delete all Course records?")
+    if confirmation == 'yes':
         conn = sqlite3.connect("school_database.db")
         cursor = conn.cursor()
-
-        cursor.execute("SELECT * FROM course")
-        courses = cursor.fetchall()
-
-        conn.close()
-        return courses
-
-    @staticmethod
-    def delete_course(course_id):
-        conn = sqlite3.connect("school_database.db")
-        cursor = conn.cursor()
-
-        cursor.execute("DELETE FROM course WHERE course_id = ?", (course_id,))
-
+        cursor.execute("DELETE FROM course")
         conn.commit()
-        conn.close()
+        messagebox.showinfo("Deletion Successful", "All Course records have been deleted.")

@@ -74,7 +74,7 @@ def show_student_notice_records():
     # Create a treeview widget to display records
     tree = ttk.Treeview(student_notice_records_window, columns=("Notice ID", "Student ID", "Title", "Content",
                                                                 "Published Date"))
-    tree.heading("#0", text="Record")
+    tree.heading("#0", text="Student Notice Record")
     tree.heading("#1", text="Notice ID")
     tree.heading("#2", text="Student ID")
     tree.heading("#3", text="Title")
@@ -184,7 +184,7 @@ def show_employee_notice_records():
     # Create a treeview widget to display records
     tree = ttk.Treeview(employee_notice_records_window, columns=("Notice ID", "Employee ID", "Title", "Content",
                                                                  "Published Date"))
-    tree.heading("#0", text="Record")
+    tree.heading("#0", text="Employee Notice Record")
     tree.heading("#1", text="Notice ID")
     tree.heading("#2", text="Employee ID")
     tree.heading("#3", text="Title")

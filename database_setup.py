@@ -1,14 +1,59 @@
 import sqlite3
 
 
+# Create a table to store employee information
+def create_employee_table():
+    conn = sqlite3.connect("school_database.db")
+    cursor = conn.cursor()
+    cursor.execute('''CREATE TABLE IF NOT EXISTS employees (
+                    employee_id INTEGER PRIMARY KEY,
+                    first_name TEXT,
+                    last_name TEXT,
+                    dob DATE,
+                    address TEXT,
+                    contact_number TEXT,
+                    role TEXT
+                    )''')
+    conn.commit()
+    conn.close()
+
+
+# Create a table to store class information
+def create_course_table():
+    conn = sqlite3.connect("school_database.db")
+    cursor = conn.cursor()
+    cursor.execute('''CREATE TABLE IF NOT EXISTS course (
+                    course_id INTEGER PRIMARY KEY,
+                    course_name TEXT,
+                    course_description TEXT,
+                    employee_id INTEGER,
+                    FOREIGN KEY (employee_id) REFERENCES employees (employee_id)
+                    )''')
+
+
 # Create a table to store class information
 def create_class_table():
     conn = sqlite3.connect("school_database.db")
     cursor = conn.cursor()
     cursor.execute('''CREATE TABLE IF NOT EXISTS class (
                     class_id INTEGER PRIMARY KEY,
-                    class_name TEXT
+                    class_name TEXT,
+                    course_id INTEGER,
+                    FOREIGN KEY (course_id) REFERENCES course (course_id)
                     )''')
+    conn.commit()
+    conn.close()
+
+
+def create_class_courses_table():
+    conn = sqlite3.connect("school_database.db")
+    cursor = conn.cursor()
+    cursor.execute('''CREATE TABLE IF NOT EXISTS class_courses (
+                    class_id INTEGER,
+                    course_id INTEGER,
+                    PRIMARY KEY (class_id, course_id),
+                    FOREIGN KEY (class_id) REFERENCES class (class_id),
+                    FOREIGN KEY (course_id) REFERENCES course (course_id))''')
     conn.commit()
     conn.close()
 
@@ -36,34 +81,6 @@ def create_student_table():
     conn.close()
 
 
-# Create a table to store employee information
-def create_employee_table():
-    conn = sqlite3.connect("school_database.db")
-    cursor = conn.cursor()
-    cursor.execute('''CREATE TABLE IF NOT EXISTS employees (
-                    employee_id INTEGER PRIMARY KEY,
-                    first_name TEXT,
-                    last_name TEXT,
-                    dob DATE,
-                    address TEXT,
-                    contact_number TEXT,
-                    role TEXT
-                    )''')
-    conn.commit()
-    conn.close()
-
-
-# Create a table to store class information
-def create_course_table():
-    conn = sqlite3.connect("school_database.db")
-    cursor = conn.cursor()
-    cursor.execute('''CREATE TABLE IF NOT EXISTS course (
-                    course_id INTEGER PRIMARY KEY,
-                    course_name TEXT,
-                    course_description TEXT
-                    )''')
-
-
 def create_fee_table():
     conn = sqlite3.connect("school_database.db")
     cursor = conn.cursor()
@@ -85,7 +102,7 @@ def create_student_notice_table():
                         stud_notice_id INTEGER PRIMARY KEY,
                         student_id INTEGER,
                         title TEXT,
-                        content TEXT
+                        content TEXT,
                         publish_date DATE,
                         FOREIGN KEY (student_id) REFERENCES students (student_id)
                     )''')
@@ -113,3 +130,17 @@ def create_attendance_table():
                             status TEXT,
                             FOREIGN KEY (student_id) REFERENCES students (student_id)
                         )''')
+
+
+def create_grade_table():
+    conn = sqlite3.connect("school_database.db")
+    cursor = conn.cursor()
+    cursor.execute('''CREATE TABLE IF NOT EXISTS grades (
+                        student_id INTEGER,
+                        course_id INTEGER,
+                        grade REAL,
+                        FOREIGN KEY (student_id) REFERENCES students (student_id),
+                        FOREIGN KEY (course_id) REFERENCES course (course_id)
+                    )''')
+    conn.commit()
+    conn.close()
