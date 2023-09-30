@@ -85,3 +85,37 @@ def delete_all_class_courses_records():
         cursor.execute("DELETE FROM class_courses")
         conn.commit()
         messagebox.showinfo("Deletion Successful", "All Class records have been deleted.")
+
+
+# Login authentication
+def authenticate_student(student_id, student_password):
+    conn = sqlite3.connect("school_database.db")
+    cursor = conn.cursor()
+
+    # Execute a query to check if the student ID and password match
+    cursor.execute(
+        "SELECT COUNT(*) FROM students WHERE student_id = CAST(:student_id AS INTEGER) AND password = :password",
+        {"student_id": student_id, "password": student_password})
+
+    result = cursor.fetchone()
+
+    conn.close()
+
+    # If the query result is 1, it means the student with the provided ID and password exists
+    return result[0] == 1
+
+
+def authenticate_teacher(employee_id, employee_password):
+    conn = sqlite3.connect("school_database.db")
+    cursor = conn.cursor()
+
+    # Execute a query to check if the employee ID, password, and role match
+    cursor.execute("SELECT COUNT(*) FROM employees WHERE employee_id = ? AND password = ? AND role = 'Teacher'",
+                   (employee_id, employee_password))
+
+    result = cursor.fetchone()
+
+    conn.close()
+
+    # If the query result is 1, it means the employee with the provided ID, password, and role exists
+    return result[0] == 1

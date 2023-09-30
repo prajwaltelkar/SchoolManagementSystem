@@ -11,7 +11,8 @@ from database_setup import (create_student_notice_table, create_student_table, c
                             create_employee_table, create_employee_notice_table, create_fee_table,
                             create_attendance_table, create_class_courses_table, create_grade_table)
 from attendance import AttendanceSystem, AttendanceViewer, show_attendance_records, delete_all_attendance_records
-from common_util import ClassCourses, show_class_courses_records, delete_all_class_courses_records
+from common_util import (ClassCourses, show_class_courses_records, delete_all_class_courses_records,
+                         authenticate_student, authenticate_teacher)
 from grades import StudentGradesViewer, GradeAssignmentApp
 
 
@@ -21,7 +22,7 @@ class LoginPage:
         self.root.title("Login")
 
         # Create and pack entry fields for username and password
-        self.username_label = tk.Label(root, text="Username:")
+        self.username_label = tk.Label(root, text="Unique ID:")
         self.username_label.pack()
         self.username_entry = tk.Entry(root)
         self.username_entry.pack()
@@ -54,19 +55,22 @@ class LoginPage:
             # Open the admin dashboard
             messagebox.showinfo("Login Successful", "Welcome, Admin!")
             self.open_admin_page()
-        elif role == "Student" and username == "student" and password == "studentpassword":
-            self.root.withdraw()
-            # Student functionality
-            messagebox.showinfo("Login Successful", "Welcome, Student!")
-            # Add student functionality here
-        elif role == "Staff" and username == "" and password == "":
-            self.root.withdraw()
-            # Staff functionality
-            messagebox.showinfo("Login Successful", "Welcome, Staff!")
-            self.open_staff_page()
-            # Add staff functionality here
-        else:
-            messagebox.showerror("Login Failed", "Invalid credentials")
+        elif role == "Student":
+
+            # Authenticate based on student ID and password
+            if authenticate_student(username, password):
+                self.root.withdraw()
+                messagebox.showinfo("Login Successful", "Welcome, Student!")
+            else:
+                messagebox.showerror("Login Failed", "Invalid credentials")
+
+        elif role == "Staff":
+            if authenticate_teacher(username, password):
+                self.root.withdraw()
+                messagebox.showinfo("Login Successful", "Welcome, Staff!")
+                self.open_teacher_page()
+            else:
+                messagebox.showerror("Login Failed", "Invalid credentials")
 
     def open_admin_page(self):
         create_class_table()
@@ -213,7 +217,7 @@ class LoginPage:
     #
     #     # You can use the existing class modules and functionalities for student actions here.
     #
-    def open_staff_page(self):
+    def open_teacher_page(self):
         # Create a staff GUI window or navigate to the staff actions
         create_attendance_table()
         create_grade_table()

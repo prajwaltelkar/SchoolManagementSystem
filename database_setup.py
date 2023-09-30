@@ -12,7 +12,8 @@ def create_employee_table():
                     dob DATE,
                     address TEXT,
                     contact_number TEXT,
-                    role TEXT
+                    role TEXT,
+                    password TEXT
                     )''')
     conn.commit()
     conn.close()
@@ -73,6 +74,7 @@ def create_student_table():
                     mother_name TEXT,
                     enrollment_date DATE,
                     gender TEXT,
+                    password TEXT,
                     class_id INTEGER,
                     FOREIGN KEY (class_id) REFERENCES class(class_id)
                     )''')

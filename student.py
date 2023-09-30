@@ -62,6 +62,11 @@ class Student:
         self.gender_entry = tk.Entry(self.student_window)
         self.gender_entry.pack()
 
+        self.password_label = tk.Label(self.student_window, text="Password:")
+        self.password_label.pack()
+        self.password_entry = tk.Entry(self.student_window)
+        self.password_entry.pack()
+
         self.class_id_label = tk.Label(self.student_window, text="Class ID:")
         self.class_id_label.pack()
         self.class_id_entry = tk.Entry(self.student_window)
@@ -83,6 +88,7 @@ class Student:
         mother_name = self.mother_name_entry.get()
         enrollment_date = self.enrollment_date_entry.get()
         gender = self.gender_entry.get()
+        password = self.password_entry.get()
         class_id = self.class_id_entry.get()
 
         # Insert student information into the database
@@ -91,10 +97,10 @@ class Student:
 
         cursor.execute('''INSERT INTO students (
                             student_id, first_name, last_name, dob, address, contact_number, 
-                            father_name, mother_name, enrollment_date, gender, class_id
-                        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)''',
+                            father_name, mother_name, enrollment_date, gender, password, class_id
+                        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)''',
                        (student_id, first_name, last_name, dob, address, contact_number,
-                        father_name, mother_name, enrollment_date, gender, class_id))
+                        father_name, mother_name, enrollment_date, gender, password, class_id))
 
         conn.commit()
         conn.close()
@@ -113,7 +119,7 @@ def show_student_records():
     tree = ttk.Treeview(records_window, columns=("Student ID", "First Name", "Last Name", "DOB", "Address",
                                                  "Contact Number", "Father Name", "Mother Name",
                                                  "Enrollment Date",
-                                                 "Gender", "Class ID"))
+                                                 "Gender", "Password", "Class ID"))
     tree.heading("#0", text="Student Records")
     tree.heading("#1", text="Student ID")
     tree.heading("#2", text="First Name")
@@ -125,7 +131,8 @@ def show_student_records():
     tree.heading("#8", text="Mother Name")
     tree.heading("#9", text="Enrollment Date")
     tree.heading("#10", text="Gender")
-    tree.heading("#11", text="Class ID")
+    tree.heading("#11", text="Password")
+    tree.heading("#12", text="Class ID")
 
     # Create horizontal scrollbar
     xscroll = ttk.Scrollbar(records_window, orient=tk.HORIZONTAL, command=tree.xview)

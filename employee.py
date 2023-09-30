@@ -47,6 +47,11 @@ class Employee:
         self.role_entry = tk.Entry(self.employee_window)
         self.role_entry.pack()
 
+        password_label = tk.Label(self.employee_window, text="Password:")
+        password_label.pack()
+        self.password_entry = tk.Entry(self.employee_window)
+        self.password_entry.pack()
+
         # Create the "Save" button and bind it to the save_employee method
         self.save_button = tk.Button(self.employee_window, text="Save", command=self.save_employee)
         self.save_button.pack()
@@ -59,15 +64,16 @@ class Employee:
         address = self.address_entry.get()
         contact_number = self.contact_number_entry.get()
         role = self.role_entry.get()
+        password = self.password_entry.get()
 
         conn = sqlite3.connect("school_database.db")
         cursor = conn.cursor()
 
         cursor.execute('''INSERT INTO employees (
-                            employee_id, first_name, last_name, dob, address, contact_number, role
-                        ) VALUES (?, ?, ?, ?, ?, ?, ?)''',
+                            employee_id, first_name, last_name, dob, address, contact_number, role, password
+                        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)''',
                        (employee_id, first_name, last_name, dob, address,
-                        contact_number, role))
+                        contact_number, role, password))
 
         self.employee_window.destroy()
         messagebox.showinfo("Successful", "Employee Created!")
@@ -83,7 +89,7 @@ def show_employee_records():
 
     # Create a treeview widget to display records
     tree = ttk.Treeview(records_window, columns=("Employee ID", "First Name", "Last Name", "DOB", "Address",
-                                                 "Contact Number", "Role"))
+                                                 "Contact Number", "Role", "Password"))
     tree.heading("#0", text="Employee Records")
     tree.heading("#1", text="Employee ID")
     tree.heading("#2", text="First Name")
@@ -92,6 +98,7 @@ def show_employee_records():
     tree.heading("#5", text="Address")
     tree.heading("#6", text="Contact Number")
     tree.heading("#7", text="Role")
+    tree.heading("#8", text="Password")
 
     # Create horizontal scrollbar
     xscroll = ttk.Scrollbar(records_window, orient=tk.HORIZONTAL, command=tree.xview)
