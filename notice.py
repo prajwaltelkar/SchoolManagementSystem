@@ -10,12 +10,6 @@ class StudentNotice:
         self.student_notice_window = tk.Toplevel()
         self.student_notice_window.title("Send Student Notice")
 
-        # Create and pack entry fields for student_notice attributes
-        self.notice_id_label = tk.Label(self.student_notice_window, text="Notice ID:")
-        self.notice_id_label.pack()
-        self.notice_id_entry = tk.Entry(self.student_notice_window)
-        self.notice_id_entry.pack()
-
         self.student_id_label = tk.Label(self.student_notice_window, text="Student ID:")
         self.student_id_label.pack()
         self.student_id_entry = tk.Entry(self.student_notice_window)
@@ -42,7 +36,6 @@ class StudentNotice:
 
     def save_student_notice(self):
         # Retrieve data from entry fields
-        notice_id = self.notice_id_entry.get()
         student_id = self.student_id_entry.get()
         title = self.title_entry.get()
         content = self.content_entry.get()
@@ -53,9 +46,9 @@ class StudentNotice:
         cursor = conn.cursor()
 
         cursor.execute('''INSERT INTO student_notice (
-                                stud_notice_id, student_id, title, content, publish_date
-                            ) VALUES (?, ?, ?, ?, ?)''',
-                       (notice_id, student_id, title, content, publish_date))
+                                student_id, title, content, publish_date
+                            ) VALUES (?, ?, ?, ?)''',
+                       (student_id, title, content, publish_date))
 
         conn.commit()
         conn.close()
@@ -121,11 +114,6 @@ class EmployeeNotice:
         self.employee_notice_window.title("Send Employee Notice")
 
         # Create and pack entry fields for employee_notice attributes
-        self.notice_id_label = tk.Label(self.employee_notice_window, text="Notice ID:")
-        self.notice_id_label.pack()
-        self.notice_id_entry = tk.Entry(self.employee_notice_window)
-        self.notice_id_entry.pack()
-
         self.employee_id_label = tk.Label(self.employee_notice_window, text="Employee ID:")
         self.employee_id_label.pack()
         self.employee_id_entry = tk.Entry(self.employee_notice_window)
@@ -152,7 +140,6 @@ class EmployeeNotice:
 
     def save_employee_notice(self):
         # Retrieve data from entry fields
-        notice_id = self.notice_id_entry.get()
         employee_id = self.employee_id_entry.get()
         title = self.title_entry.get()
         content = self.content_entry.get()
@@ -163,9 +150,9 @@ class EmployeeNotice:
         cursor = conn.cursor()
 
         cursor.execute('''INSERT INTO employee_notice (
-                                emp_notice_id, employee_id, title, content, publish_date
-                            ) VALUES (?, ?, ?, ?, ?)''',
-                       (notice_id, employee_id, title, content, publish_date))
+                                employee_id, title, content, publish_date
+                            ) VALUES (?, ?, ?, ?)''',
+                       (employee_id, title, content, publish_date))
 
         conn.commit()
         conn.close()

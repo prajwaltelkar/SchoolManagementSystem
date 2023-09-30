@@ -3,7 +3,8 @@ from tkinter import messagebox
 from student import Student, show_student_records, delete_all_student_records
 from classroom import ClassRoom, show_class_records, delete_all_class_records
 from course import Course, show_course_records, delete_all_course_records
-from employee import Employee, show_employee_records, delete_all_employee_records, display_employee_notices
+from employee import (Employee, show_employee_records, delete_all_employee_records, display_employee_notices,
+                      authenticate_teacher, authenticate_non_teacher)
 from fee import Fee, show_fee_records, delete_all_fee_records
 from notice import (StudentNotice, EmployeeNotice, show_student_notice_records, delete_all_student_notice_records,
                     show_employee_notice_records, delete_all_employee_notice_records)
@@ -12,7 +13,7 @@ from database_setup import (create_student_notice_table, create_student_table, c
                             create_attendance_table, create_class_courses_table, create_grade_table)
 from attendance import AttendanceSystem, AttendanceViewer, show_attendance_records, delete_all_attendance_records
 from common_util import (ClassCourses, show_class_courses_records, delete_all_class_courses_records,
-                         authenticate_student, authenticate_teacher)
+                         authenticate_student)
 from grades import StudentGradesViewer, GradeAssignmentApp
 
 
@@ -44,31 +45,33 @@ class LoginPage:
         self.login_button.pack()
 
     def login(self):
-        username = self.username_entry.get()
+        self.username = self.username_entry.get()
         password = self.password_entry.get()
         role = self.role_var.get()
 
         # Add your authentication logic here
-        if role == "Admin" and username == "" and password == "":
+        if role == "Admin" and self.username == "" and password == "":
             # Close the login window
             self.root.withdraw()
             # Open the admin dashboard
             messagebox.showinfo("Login Successful", "Welcome, Admin!")
             self.open_admin_page()
         elif role == "Student":
-
-            # Authenticate based on student ID and password
-            if authenticate_student(username, password):
+            if authenticate_student(self.username, password):  # Authenticate based on student ID and password
                 self.root.withdraw()
                 messagebox.showinfo("Login Successful", "Welcome, Student!")
             else:
                 messagebox.showerror("Login Failed", "Invalid credentials")
 
         elif role == "Staff":
-            if authenticate_teacher(username, password):
+            if authenticate_teacher(self.username, password):  # Authenticate based on employee ID and password for teacher
+                self.root.withdraw()
+                messagebox.showinfo("Login Successful", "Welcome, Teacher!")
+                self.open_teacher_page()
+            elif authenticate_non_teacher(self.username, password):
                 self.root.withdraw()
                 messagebox.showinfo("Login Successful", "Welcome, Staff!")
-                self.open_teacher_page()
+                self.open_staff_page()
             else:
                 messagebox.showerror("Login Failed", "Invalid credentials")
 
@@ -249,7 +252,7 @@ class LoginPage:
 
         # Create buttons for notice viewer
         notice_view_button = tk.Button(self.employee_window, text="View Notices",
-                                       command=lambda: display_employee_notices(20231))
+                                       command=lambda: display_employee_notices(self.username))
         notice_view_button.pack()
 
         def employee_logout():
@@ -270,6 +273,38 @@ class LoginPage:
         if messagebox.askokcancel("Logout", "Do you want to quit from employee?"):
             # Close the admin window
             self.employee_window.destroy()
+            self.root.deiconify()
+            self.username_entry.delete(0, tk.END)
+            self.password_entry.delete(0, tk.END)
+
+    def open_staff_page(self):
+        # Create a new window for the admin interface
+        self.staff_window = tk.Toplevel()
+        self.staff_window.title("Employee Dashboard")
+
+        # Create buttons for notice viewer
+        notice_view_button = tk.Button(self.staff_window, text="View Notices",
+                                       command=lambda: display_employee_notices(self.username))
+        notice_view_button.pack()
+
+        def staff_logout():
+            if messagebox.askokcancel("Logout", "Do you want to logout from employee?"):
+                # Close the admin window
+                self.staff_window.destroy()
+                self.root.deiconify()
+
+        logout_button = tk.Button(self.staff_window, text="Logout", command=staff_logout)
+        logout_button.pack()
+        self.username_entry.delete(0, tk.END)
+        self.password_entry.delete(0, tk.END)
+
+        self.staff_window.protocol("WM_DELETE_WINDOW",
+                                   self.on_staff_window_closing)  # Handle admin_window close event
+
+    def on_staff_window_closing(self):
+        if messagebox.askokcancel("Logout", "Do you want to quit from employee?"):
+            # Close the admin window
+            self.staff_window.destroy()
             self.root.deiconify()
             self.username_entry.delete(0, tk.END)
             self.password_entry.delete(0, tk.END)
