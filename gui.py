@@ -9,9 +9,10 @@ from notice import (StudentNotice, EmployeeNotice, show_student_notice_records, 
                     show_employee_notice_records, delete_all_employee_notice_records)
 from database_setup import (create_student_notice_table, create_student_table, create_course_table, create_class_table,
                             create_employee_table, create_employee_notice_table, create_fee_table,
-                            create_attendance_table, create_class_courses_table)
+                            create_attendance_table, create_class_courses_table, create_grade_table)
 from attendance import AttendanceSystem, AttendanceViewer, show_attendance_records, delete_all_attendance_records
 from common_util import ClassCourses, show_class_courses_records, delete_all_class_courses_records
+from grades import StudentGradesViewer, GradeAssignmentApp
 
 
 class LoginPage:
@@ -91,7 +92,8 @@ class LoginPage:
         create_course_button = tk.Button(self.admin_window, text="Create Course", command=Course)
         create_course_button.pack()
 
-        register_class_courses_button = tk.Button(self.admin_window, text="Register Courses to Class", command=ClassCourses)
+        register_class_courses_button = tk.Button(self.admin_window, text="Register Courses to Class",
+                                                  command=ClassCourses)
         register_class_courses_button.pack()
 
         register_employee_button = tk.Button(self.admin_window, text="Register Employee", command=Employee)
@@ -214,6 +216,7 @@ class LoginPage:
     def open_staff_page(self):
         # Create a staff GUI window or navigate to the staff actions
         create_attendance_table()
+        create_grade_table()
 
         # Create a new window for the admin interface
         self.employee_window = tk.Toplevel()
@@ -227,12 +230,19 @@ class LoginPage:
         attendance_view_button = tk.Button(self.employee_window, text="Attendance Viewer", command=AttendanceViewer)
         attendance_view_button.pack()
 
-        # Create a button to show student notice records
+        # Create a button to show complete attendance records
         show_attendance_records_button = tk.Button(self.employee_window, text="Show Complete Attendance Records",
                                                    command=show_attendance_records)
         show_attendance_records_button.pack()
 
-        # You can use the existing class modules and functionalities for staff actions here.
+        # Create buttons for attendance
+        attendance_button = tk.Button(self.employee_window, text="Assign Grades", command=GradeAssignmentApp)
+        attendance_button.pack()
+
+        # Create buttons for grades viewer
+        grades_view_button = tk.Button(self.employee_window, text="Grades Viewer", command=StudentGradesViewer)
+        grades_view_button.pack()
+
         def employee_logout():
             if messagebox.askokcancel("Logout", "Do you want to logout from employee?"):
                 # Close the admin window

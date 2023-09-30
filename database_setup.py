@@ -138,7 +138,8 @@ def create_grade_table():
     cursor.execute('''CREATE TABLE IF NOT EXISTS grades (
                         student_id INTEGER,
                         course_id INTEGER,
-                        grade REAL,
+                        marks INTEGER,
+                        grade TEXT,
                         FOREIGN KEY (student_id) REFERENCES students (student_id),
                         FOREIGN KEY (course_id) REFERENCES course (course_id)
                     )''')
