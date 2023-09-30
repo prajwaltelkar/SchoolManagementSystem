@@ -63,7 +63,7 @@ class StudentNotice:
         # Close the student registration window
         self.student_notice_window.destroy()
         messagebox.showinfo("Student Notice Status Updated", "Student Notice status"
-                                                             "has been updated for the student.")
+                                                             " has been updated for the student.")
 
 
 def show_student_notice_records():
@@ -173,7 +173,7 @@ class EmployeeNotice:
         # Close the Employee registration window
         self.employee_notice_window.destroy()
         messagebox.showinfo("Employee Notice Status Updated", "Employee Notice status"
-                                                              "has been updated for the Employee.")
+                                                              " has been updated for the Employee.")
 
 
 def show_employee_notice_records():
@@ -216,7 +216,7 @@ def show_employee_notice_records():
 
 def delete_all_employee_notice_records():
     confirmation = messagebox.askquestion("Delete All Records",
-                                          "Are you sure you want to delete all Employee  notice records?")
+                                          "Are you sure you want to delete all Employee notice records?")
     if confirmation == 'yes':
         conn = sqlite3.connect("school_database.db")
         cursor = conn.cursor()

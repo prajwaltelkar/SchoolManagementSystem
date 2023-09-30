@@ -3,6 +3,7 @@ import tkinter as tk
 from tkinter import ttk
 import tkinter.font as tkfont
 from tkinter import messagebox
+from tkinter import scrolledtext
 
 
 class Employee:
@@ -132,3 +133,33 @@ def delete_all_employee_records():
         cursor.execute("DELETE FROM employees")
         conn.commit()
         messagebox.showinfo("Deletion Successful", "All employee records have been deleted.")
+
+
+def fetch_employee_notices(employee_id):
+    conn = sqlite3.connect("school_database.db")
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM employee_notice WHERE employee_id = ?", (employee_id,))
+    notices = cursor.fetchall()
+    conn.close()
+    return notices
+
+
+def display_employee_notices(employee_id):
+    notices = fetch_employee_notices(employee_id)
+
+    # Create a new window
+    window = tk.Toplevel()
+    window.title("Employee Notices")
+
+    # Create a scrolled text widget to display notices
+    text_widget = scrolledtext.ScrolledText(window, width=50, height=20)
+    text_widget.pack()
+
+    # Insert the notices into the text widget
+    for notice in notices:
+        text_widget.insert(tk.END, f"Title: {notice[2]}\n")
+        text_widget.insert(tk.END, f"Content: {notice[3]}\n")
+        text_widget.insert(tk.END, f"Publish Date: {notice[4]}\n\n")
+
+    # Disable text editing in the widget
+    text_widget.config(state=tk.DISABLED)

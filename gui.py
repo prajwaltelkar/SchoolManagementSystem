@@ -3,7 +3,7 @@ from tkinter import messagebox
 from student import Student, show_student_records, delete_all_student_records
 from classroom import ClassRoom, show_class_records, delete_all_class_records
 from course import Course, show_course_records, delete_all_course_records
-from employee import Employee, show_employee_records, delete_all_employee_records
+from employee import Employee, show_employee_records, delete_all_employee_records, display_employee_notices
 from fee import Fee, show_fee_records, delete_all_fee_records
 from notice import (StudentNotice, EmployeeNotice, show_student_notice_records, delete_all_student_notice_records,
                     show_employee_notice_records, delete_all_employee_notice_records)
@@ -246,6 +246,11 @@ class LoginPage:
         # Create buttons for grades viewer
         grades_view_button = tk.Button(self.employee_window, text="Grades Viewer", command=StudentGradesViewer)
         grades_view_button.pack()
+
+        # Create buttons for notice viewer
+        notice_view_button = tk.Button(self.employee_window, text="View Notices",
+                                       command=lambda: display_employee_notices(20231))
+        notice_view_button.pack()
 
         def employee_logout():
             if messagebox.askokcancel("Logout", "Do you want to logout from employee?"):
