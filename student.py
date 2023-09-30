@@ -166,3 +166,38 @@ def delete_all_student_records():
         cursor.execute("DELETE FROM students")
         conn.commit()
         messagebox.showinfo("Deletion Successful", "All student records have been deleted.")
+
+
+def fetch_student_grades(student_id):
+    conn = sqlite3.connect("school_database.db")
+    cursor = conn.cursor()
+    cursor.execute("SELECT course.course_name, grades.marks, grades.grade FROM course "
+                   "INNER JOIN grades ON course.course_id = grades.course_id "
+                   "WHERE grades.student_id = ?", (student_id,))
+    grades = cursor.fetchall()
+    conn.close()
+    return grades
+
+
+def display_student_grades(student_id):
+    grades = fetch_student_grades(student_id)
+
+    # Create a new window
+    window = tk.Toplevel()
+    window.title("Student Grades")
+
+    # Create a treeview widget to display grades
+    tree = ttk.Treeview(window, columns=("Course", "Marks", "Grade"))
+    tree.heading("#1", text="Course")
+    tree.heading("#2", text="Marks")
+    tree.heading("#3", text="Grade")
+    tree.pack()
+
+    # Insert the grades into the treeview
+    for grade in grades:
+        tree.insert("", "end", values=(grade[0], grade[1], grade[2]))
+
+    # Adjust column widths
+    tree.column("#1", width=150)
+    tree.column("#2", width=75)
+    tree.column("#3", width=75)

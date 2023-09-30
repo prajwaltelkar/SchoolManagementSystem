@@ -1,6 +1,6 @@
 import tkinter as tk
 from tkinter import messagebox
-from student import Student, show_student_records, delete_all_student_records
+from student import Student, show_student_records, delete_all_student_records, display_student_grades
 from classroom import ClassRoom, show_class_records, delete_all_class_records
 from course import Course, show_course_records, delete_all_course_records
 from employee import (Employee, show_employee_records, delete_all_employee_records, display_employee_notices,
@@ -60,6 +60,7 @@ class LoginPage:
             if authenticate_student(self.username, password):  # Authenticate based on student ID and password
                 self.root.withdraw()
                 messagebox.showinfo("Login Successful", "Welcome, Student!")
+                self.open_student_page()
             else:
                 messagebox.showerror("Login Failed", "Invalid credentials")
 
@@ -215,11 +216,6 @@ class LoginPage:
             self.username_entry.delete(0, tk.END)
             self.password_entry.delete(0, tk.END)
 
-    # def open_student_page(self):
-    #     # Create a student GUI window or navigate to the student actions
-    #
-    #     # You can use the existing class modules and functionalities for student actions here.
-    #
     def open_teacher_page(self):
         # Create a staff GUI window or navigate to the staff actions
         create_attendance_table()
@@ -308,6 +304,42 @@ class LoginPage:
             self.root.deiconify()
             self.username_entry.delete(0, tk.END)
             self.password_entry.delete(0, tk.END)
+
+    def open_student_page(self):
+        # Create a student GUI window or navigate to the student actions
+        # Create a new window for the admin interface
+        self.student_window = tk.Toplevel()
+        self.student_window.title("Student Dashboard")
+
+        # Create buttons for notice viewer
+        grades_view_button = tk.Button(self.student_window, text="View Grades",
+                                       command=lambda: display_student_grades(self.username))
+        grades_view_button.pack()
+
+        def student_logout():
+            if messagebox.askokcancel("Logout", "Do you want to logout from employee?"):
+                # Close the admin window
+                self.student_window.destroy()
+                self.root.deiconify()
+
+        logout_button = tk.Button(self.student_window, text="Logout", command=student_logout)
+        logout_button.pack()
+        self.username_entry.delete(0, tk.END)
+        self.password_entry.delete(0, tk.END)
+
+        self.student_window.protocol("WM_DELETE_WINDOW",
+                                   self.on_student_window_closing)  # Handle admin_window close event
+
+    def on_student_window_closing(self):
+        if messagebox.askokcancel("Logout", "Do you want to quit from employee?"):
+            # Close the admin window
+            self.student_window.destroy()
+            self.root.deiconify()
+            self.username_entry.delete(0, tk.END)
+            self.password_entry.delete(0, tk.END)
+
+
+
 
 
 def main():
