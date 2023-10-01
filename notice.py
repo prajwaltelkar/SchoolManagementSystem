@@ -1,6 +1,6 @@
 import tkinter as tk
 from tkinter import ttk
-from tkinter import messagebox
+from tkinter import messagebox, simpledialog
 import sqlite3
 import tkinter.font as tkfont
 
@@ -95,6 +95,36 @@ def show_student_notice_records():
         tree.column(col, width=tkfont.Font().measure(col) + 10)  # Adjust the width as needed
 
     tree.pack(fill=tk.BOTH, expand=True)
+
+
+def delete_student_notice_record():
+    # Create a Tkinter window
+    notice_window = tk.Tk()
+    notice_window.withdraw()
+
+    # Prompt the user for stud_notice_id using simpledialog
+    stud_notice_id = simpledialog.askinteger("Input", "Enter Student Notice ID:")
+
+    if stud_notice_id is not None:
+        confirmation = messagebox.askquestion("Delete Student Notice",
+                                              f"Are you sure you want to delete Student Notice ID {stud_notice_id} from the Student Notices?")
+        if confirmation == 'yes':
+            conn = sqlite3.connect("school_database.db")
+            cursor = conn.cursor()
+
+            # Delete the student notice record for the specified stud_notice_id
+            cursor.execute("DELETE FROM student_notice WHERE stud_notice_id = ?", (stud_notice_id,))
+
+            conn.commit()
+            conn.close()
+            messagebox.showinfo("Deletion Successful", f"Student notice with ID {stud_notice_id} has been deleted.")
+        else:
+            messagebox.showinfo("Deletion Canceled", "Student notice has not been deleted.")
+    else:
+        messagebox.showinfo("Invalid Input", "Please provide a valid Student Notice ID.")
+
+    # Close the Tkinter window
+    notice_window.destroy()
 
 
 def delete_all_student_notice_records():
@@ -199,6 +229,37 @@ def show_employee_notice_records():
         tree.column(col, width=tkfont.Font().measure(col) + 10)  # Adjust the width as needed
 
     tree.pack(fill=tk.BOTH, expand=True)
+
+
+def delete_employee_notice_record():
+    # Create a Tkinter window
+    notice_window = tk.Tk()
+    notice_window.withdraw()  # Hide the main window
+
+    # Prompt the user for emp_notice_id using simpledialog
+    emp_notice_id = simpledialog.askinteger("Input", "Enter Employee Notice ID:")
+
+    if emp_notice_id is not None:
+        confirmation = messagebox.askquestion("Delete Employee Notice",
+                                              f"Are you sure you want to delete Employee Notice ID"
+                                              f" {emp_notice_id} from the Employee Notices?")
+        if confirmation == 'yes':
+            conn = sqlite3.connect("school_database.db")
+            cursor = conn.cursor()
+
+            # Delete the employee notice record for the specified emp_notice_id
+            cursor.execute("DELETE FROM employee_notice WHERE emp_notice_id = ?", (emp_notice_id,))
+
+            conn.commit()
+            conn.close()
+            messagebox.showinfo("Deletion Successful", f"Employee notice with ID {emp_notice_id} has been deleted.")
+        else:
+            messagebox.showinfo("Deletion Canceled", "Employee notice has not been deleted.")
+    else:
+        messagebox.showinfo("Invalid Input", "Please provide a valid Employee Notice ID.")
+
+    # Close the Tkinter window
+    notice_window.destroy()
 
 
 def delete_all_employee_notice_records():

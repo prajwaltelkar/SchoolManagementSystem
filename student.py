@@ -9,7 +9,7 @@ from reportlab.lib import colors
 from reportlab.lib.styles import getSampleStyleSheet
 from datetime import datetime
 from tkinter import messagebox
-from tkinter import scrolledtext
+from tkinter import scrolledtext, simpledialog
 
 
 class Student:
@@ -162,6 +162,35 @@ def show_student_records():
         tree.column(col, width=tkfont.Font().measure(col) + 10)  # Adjust the width as needed
 
     tree.pack(fill=tk.BOTH, expand=True)
+
+
+def delete_student():
+    student_window = tk.Tk()
+    student_window.withdraw()  # Hide the main window
+
+    # Prompt the user for student_id using simpledialog
+    student_id = simpledialog.askinteger("Input", "Enter Student ID:")
+
+    if student_id is not None:
+        confirmation = messagebox.askquestion("Delete Student",
+                                              f"Are you sure you want to delete Student ID {student_id} from the Student records?")
+        if confirmation == 'yes':
+            conn = sqlite3.connect("school_database.db")
+            cursor = conn.cursor()
+
+            # Delete the student record for the specified student_id
+            cursor.execute("DELETE FROM students WHERE student_id = ?", (student_id,))
+
+            conn.commit()
+            conn.close()
+            messagebox.showinfo("Deletion Successful", f"Student record with ID {student_id} has been deleted.")
+        else:
+            messagebox.showinfo("Deletion Canceled", "Student record has not been deleted.")
+    else:
+        messagebox.showinfo("Invalid Input", "Please provide a valid Student ID.")
+
+    # Close the Tkinter window
+    student_window.destroy()
 
 
 def delete_all_student_records():
