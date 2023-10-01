@@ -188,6 +188,7 @@ def display_student_grades(student_id):
 
     # Create a treeview widget to display grades
     tree = ttk.Treeview(window, columns=("Course", "Marks", "Grade"))
+    tree.heading("#0", text="Student Grade Report")
     tree.heading("#1", text="Course")
     tree.heading("#2", text="Marks")
     tree.heading("#3", text="Grade")
@@ -201,3 +202,169 @@ def display_student_grades(student_id):
     tree.column("#1", width=150)
     tree.column("#2", width=75)
     tree.column("#3", width=75)
+
+
+def fetch_student_courses(student_id):
+    conn = sqlite3.connect("school_database.db")
+    cursor = conn.cursor()
+    cursor.execute("SELECT course.course_name FROM course "
+                   "INNER JOIN class_courses ON course.course_id = class_courses.course_id "
+                   "WHERE class_courses.class_id = (SELECT class_id FROM students WHERE student_id = ?)",
+                   (student_id,))
+    courses = cursor.fetchall()
+    conn.close()
+    return courses
+
+
+def display_student_courses(student_id):
+    courses = fetch_student_courses(student_id)
+
+    # Create a new window
+    window = tk.Toplevel()
+    window.title("Enrolled Courses")
+
+    if not courses:
+        # If no courses are found, display a message
+        label = tk.Label(window, text="You are not enrolled in any courses.")
+        label.pack()
+    else:
+        # Display the list of enrolled courses
+        label = tk.Label(window, text="Enrolled Courses:")
+        label.pack()
+        for course in courses:
+            course_name = course[0]
+            label = tk.Label(window, text=course_name)
+            label.pack()
+
+
+def fetch_student_class(student_id):
+    conn = sqlite3.connect("school_database.db")
+    cursor = conn.cursor()
+    cursor.execute("SELECT class.class_name FROM class "
+                   "INNER JOIN students ON class.class_id = students.class_id "
+                   "WHERE students.student_id = ?", (student_id,))
+    class_name = cursor.fetchone()
+
+    if class_name is not None:
+        cursor.execute("SELECT students.first_name, students.last_name FROM students "
+                       "WHERE students.class_id = (SELECT class_id FROM students WHERE student_id = ?)",
+                       (student_id,))
+        students_in_class = cursor.fetchall()
+    else:
+        students_in_class = []
+
+    conn.close()
+    return class_name, students_in_class
+
+
+def display_student_class_and_students(student_id):
+    class_name, students_in_class = fetch_student_class(student_id)
+
+    # Create a new window
+    window = tk.Toplevel()
+    window.title("Enrolled Class and Students")
+
+    if class_name is not None:
+        # Display the enrolled class
+        label = tk.Label(window, text=f"Enrolled Class: {class_name[0]}")
+        label.pack()
+
+        if students_in_class:
+            # Display the list of students in the class
+            label = tk.Label(window, text="Classmates:")
+            label.pack()
+            for student in students_in_class:
+                student_name = f"{student[0]} {student[1]}"
+                label = tk.Label(window, text=student_name)
+                label.pack()
+        else:
+            # If no students are found in the class, display a message
+            label = tk.Label(window, text="No students found in the class.")
+            label.pack()
+    else:
+        # If no class is found, display a message
+        label = tk.Label(window, text="You are not enrolled in any class.")
+        label.pack()
+
+
+def fetch_student_fee_payments(student_id):
+    conn = sqlite3.connect("school_database.db")
+    cursor = conn.cursor()
+    cursor.execute("SELECT payment_id, amount, payment_date, payment_status, academic_year "
+                   "FROM fee_payments WHERE student_id = ? ORDER BY payment_date ASC",
+                   (student_id,))
+    fee_payments = cursor.fetchall()
+    conn.close()
+    return fee_payments
+
+
+def display_student_fee_report(student_id):
+    fee_payments = fetch_student_fee_payments(student_id)
+
+    # Create a new window
+    window = tk.Toplevel()
+    window.title("Fee Payment Report")
+
+    if not fee_payments:
+        # If no fee payments are found, display a message
+        label = tk.Label(window, text="No fee payments found for this student.")
+        label.pack()
+    else:
+        # Create a treeview widget to display the fee payment report
+        tree = ttk.Treeview(window, columns=("Payment ID", "Amount", "Payment Date", "Payment Status", "Academic Year"))
+        tree.heading("#0", text="Fee Payment Report")
+        tree.heading("#1", text="Payment ID")
+        tree.heading("#2", text="Amount")
+        tree.heading("#3", text="Payment Date")
+        tree.heading("#4", text="Payment Status")
+        tree.heading("#5", text="Academic Year")
+        tree.pack()
+
+        # Insert fee payment data into the treeview
+        for payment in fee_payments:
+            tree.insert("", "end", values=payment)
+
+        # Adjust column widths
+        tree.column("#1", width=75)
+        tree.column("#2", width=75)
+        tree.column("#3", width=100)
+        tree.column("#4", width=100)
+        tree.column("#5", width=100)
+
+
+def fetch_student_attendance(student_id):
+    conn = sqlite3.connect("school_database.db")
+    cursor = conn.cursor()
+    cursor.execute("SELECT date, status FROM attendance WHERE student_id = ? ORDER BY date ASC",
+                   (student_id,))
+    attendance_data = cursor.fetchall()
+    conn.close()
+    return attendance_data
+
+
+def display_student_attendance_report(student_id):
+    attendance_data = fetch_student_attendance(student_id)
+
+    # Create a new window
+    window = tk.Toplevel()
+    window.title("Attendance Report")
+
+    if not attendance_data:
+        # If no attendance data is found, display a message
+        label = tk.Label(window, text="No attendance data found for this student.")
+        label.pack()
+    else:
+        # Create a treeview widget to display the attendance report
+        tree = ttk.Treeview(window, columns=("Date", "Status"))
+        tree.heading("#0", text="Attendance Report")
+        tree.heading("#1", text="Date")
+        tree.heading("#2", text="Status")
+        tree.pack()
+
+        # Insert attendance data into the treeview
+        for date, status in attendance_data:
+            tree.insert("", "end", values=(date, status))
+
+        # Adjust column widths
+        tree.column("#1", width=100)
+        tree.column("#2", width=100)

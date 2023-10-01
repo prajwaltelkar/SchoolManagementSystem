@@ -33,7 +33,7 @@ class AttendanceSystem:
 
         # Create a label for attendance date
         self.date_var = tk.StringVar()
-        self.date_label = tk.Label(self.attendance_window, text="Attendance Date (YYYY-MM-DD):")
+        self.date_label = tk.Label(self.attendance_window, text="Attendance Date (DD-MM-YYYY):")
         self.date_label.grid(row=1, column=0)
 
         # Create an entry field for attendance date
@@ -129,7 +129,7 @@ class AttendanceViewer:
 
         # Create a label for attendance date
         self.date_var = tk.StringVar()
-        self.date_label = tk.Label(self.attendance_view_window, text="Attendance Date (YYYY-MM-DD):")
+        self.date_label = tk.Label(self.attendance_view_window, text="Attendance Date (DD-MM-YYYY):")
         self.date_label.pack()
 
         # Create an entry field for attendance date

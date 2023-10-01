@@ -1,6 +1,8 @@
 import tkinter as tk
 from tkinter import messagebox
-from student import Student, show_student_records, delete_all_student_records, display_student_grades
+from student import (Student, show_student_records, delete_all_student_records, display_student_grades,
+                     display_student_courses, display_student_class_and_students, display_student_fee_report,
+                     display_student_attendance_report)
 from classroom import ClassRoom, show_class_records, delete_all_class_records
 from course import Course, show_course_records, delete_all_course_records
 from employee import (Employee, show_employee_records, delete_all_employee_records, display_employee_notices,
@@ -65,7 +67,8 @@ class LoginPage:
                 messagebox.showerror("Login Failed", "Invalid credentials")
 
         elif role == "Staff":
-            if authenticate_teacher(self.username, password):  # Authenticate based on employee ID and password for teacher
+            if authenticate_teacher(self.username,
+                                    password):  # Authenticate based on employee ID and password for teacher
                 self.root.withdraw()
                 messagebox.showinfo("Login Successful", "Welcome, Teacher!")
                 self.open_teacher_page()
@@ -311,10 +314,30 @@ class LoginPage:
         self.student_window = tk.Toplevel()
         self.student_window.title("Student Dashboard")
 
-        # Create buttons for notice viewer
+        # Create buttons for view grades
         grades_view_button = tk.Button(self.student_window, text="View Grades",
                                        command=lambda: display_student_grades(self.username))
         grades_view_button.pack()
+
+        # Create buttons to view courses enrolled
+        student_course_enroll_view_button = tk.Button(self.student_window, text="View Courses Enrolled",
+                                                      command=lambda: display_student_courses(self.username))
+        student_course_enroll_view_button.pack()
+
+        # Create buttons to view class enrolled
+        student_class_enroll_view_button = tk.Button(self.student_window, text="View Class Enrolled",
+                                                     command=lambda: display_student_class_and_students(self.username))
+        student_class_enroll_view_button.pack()
+
+        # Create buttons to view fee payments
+        student_fee_payment_view_button = tk.Button(self.student_window, text="View Fee Payment Status",
+                                                    command=lambda: display_student_fee_report(self.username))
+        student_fee_payment_view_button.pack()
+
+        # Create buttons to view attendance
+        student_attendance_view_button = tk.Button(self.student_window, text="View Attendance Status",
+                                                   command=lambda: display_student_attendance_report(self.username))
+        student_attendance_view_button.pack()
 
         def student_logout():
             if messagebox.askokcancel("Logout", "Do you want to logout from employee?"):
@@ -328,7 +351,7 @@ class LoginPage:
         self.password_entry.delete(0, tk.END)
 
         self.student_window.protocol("WM_DELETE_WINDOW",
-                                   self.on_student_window_closing)  # Handle admin_window close event
+                                     self.on_student_window_closing)
 
     def on_student_window_closing(self):
         if messagebox.askokcancel("Logout", "Do you want to quit from employee?"):
@@ -337,9 +360,6 @@ class LoginPage:
             self.root.deiconify()
             self.username_entry.delete(0, tk.END)
             self.password_entry.delete(0, tk.END)
-
-
-
 
 
 def main():
