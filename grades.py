@@ -1,11 +1,8 @@
 import tkinter as tk
 from tkinter import ttk, simpledialog, scrolledtext
 import sqlite3
-
-import tkinter as tk
-from tkinter import ttk, simpledialog
-import sqlite3
-from database_setup import create_grade_table
+import tkinter.font as tkfont
+from tkinter import messagebox
 
 
 class GradeAssignmentApp:
@@ -154,3 +151,50 @@ class StudentGradesViewer:
             message = f"Student ID: {student_id}\nStudent Name: {student_name}\nMarks: {marks}\nGrade: {grade}\n\n"
             text_widget.insert(tk.END, message)
         text_widget.config(state=tk.DISABLED)
+
+
+def show_grades_records():
+    # Create a new window for displaying records
+    records_window = tk.Toplevel()
+    records_window.title("Grades Database")
+
+    # Create a treeview widget to display records
+    tree = ttk.Treeview(records_window, columns=("Student ID", "Employee ID", "Marks", "Grade"))
+    tree.heading("#0", text="Grade Records")
+    tree.heading("#1", text="Student ID")
+    tree.heading("#2", text="Employee ID")
+    tree.heading("#3", text="Marks")
+    tree.heading("#4", text="Grade")
+
+    # Create horizontal scrollbar
+    xscroll = ttk.Scrollbar(records_window, orient=tk.HORIZONTAL, command=tree.xview)
+    xscroll.pack(side=tk.BOTTOM, fill=tk.X)
+    tree.configure(xscrollcommand=xscroll.set)
+
+    # Fetch employee records from the database
+    conn = sqlite3.connect("school_database.db")
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM grades")
+    employee_records = cursor.fetchall()
+    conn.close()
+
+    # Insert employee records into the treeview
+    for record in employee_records:
+        tree.insert("", "end", values=record)
+
+    # Adjust column widths based on content
+    for col in tree["columns"]:
+        tree.column(col, width=tkfont.Font().measure(col) + 10)  # Adjust the width as needed
+
+    tree.pack(fill=tk.BOTH, expand=True)
+
+
+def delete_all_grades_records():
+    confirmation = messagebox.askquestion("Delete All Records",
+                                          "Are you sure you want to delete all grade records?")
+    if confirmation == 'yes':
+        conn = sqlite3.connect("school_database.db")
+        cursor = conn.cursor()
+        cursor.execute("DELETE FROM grades")
+        conn.commit()
+        messagebox.showinfo("Deletion Successful", "All grade records have been deleted.")

@@ -1,8 +1,15 @@
 import tkinter as tk
 from tkinter import ttk
-from tkinter import messagebox
 import sqlite3
 import tkinter.font as tkfont
+
+from reportlab.lib.pagesizes import letter
+from reportlab.platypus import SimpleDocTemplate, PageTemplate, Frame, Paragraph, Spacer, Table
+from reportlab.lib import colors
+from reportlab.lib.styles import getSampleStyleSheet
+from datetime import datetime
+from tkinter import messagebox
+from tkinter import scrolledtext
 
 
 class Student:
@@ -368,3 +375,188 @@ def display_student_attendance_report(student_id):
         # Adjust column widths
         tree.column("#1", width=100)
         tree.column("#2", width=100)
+
+
+def fetch_student_total_attendance_percentage(student_id):
+    conn = sqlite3.connect("school_database.db")
+    cursor = conn.cursor()
+    cursor.execute("SELECT COUNT(*) FROM attendance WHERE student_id = ? AND status = 'Present'",
+                   (student_id,))
+    present_count = cursor.fetchone()[0]
+    cursor.execute("SELECT COUNT(*) FROM attendance WHERE student_id = ?",
+                   (student_id,))
+    total_count = cursor.fetchone()[0]
+    conn.close()
+
+    # Calculate attendance percentage
+    if total_count > 0:
+        attendance_percentage = (present_count / total_count) * 100
+    else:
+        attendance_percentage = 0.0
+
+    return attendance_percentage
+
+
+def fetch_student_notices(student_id):
+    conn = sqlite3.connect("school_database.db")
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM student_notice WHERE student_id = ?", (student_id,))
+    notices = cursor.fetchall()
+    conn.close()
+    return notices
+
+
+def display_student_notices(student_id):
+    notices = fetch_student_notices(student_id)
+
+    # Create a new window
+    window = tk.Toplevel()
+    window.title("Student Notices")
+
+    # Create a scrolled text widget to display notices
+    text_widget = scrolledtext.ScrolledText(window, width=50, height=20)
+    text_widget.pack()
+
+    # Insert the notices into the text widget
+    for notice in notices:
+        text_widget.insert(tk.END, f"Title: {notice[2]}\n")
+        text_widget.insert(tk.END, f"Content: {notice[3]}\n")
+        text_widget.insert(tk.END, f"Publish Date: {notice[4]}\n\n")
+
+    # Disable text editing in the widget
+    text_widget.config(state=tk.DISABLED)
+
+
+def fetch_student_grade_report(student_id):
+    conn = sqlite3.connect("school_database.db")
+    cursor = conn.cursor()
+    cursor.execute("SELECT course.course_name, grades.marks, grades.grade FROM course "
+                   "INNER JOIN grades ON course.course_id = grades.course_id "
+                   "WHERE grades.student_id = ?", (student_id,))
+    grade_report = cursor.fetchall()
+
+    # Calculate total marks and total percentage
+    total_marks = 0
+    total_percentage = 0.0
+    for _, marks, _ in grade_report:
+        total_marks += marks
+    if total_marks > 0:
+        total_percentage = (total_marks / (len(grade_report) * 100)) * 100
+
+    conn.close()
+
+    return grade_report, total_marks, total_percentage
+
+
+def generate_pdf_report(student_name, attendance_percentage, grade_report, total_marks, total_percentage):
+    try:
+        # Create the PDF filename using the provided student_name
+        pdf_filename = fr"C:\Users\Prajwal\Downloads\{student_name}_report.pdf".replace(" ", "_")
+
+        # Get the current date and time for report generation time
+        generation_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+        # Create a PDF document with a custom page template
+        doc = SimpleDocTemplate(pdf_filename, pagesize=letter)
+
+        # Define styles for the report
+        styles = getSampleStyleSheet()
+        normal_style = styles["Normal"]
+        table_style = [
+            ('BACKGROUND', (0, 0), (-1, 0), colors.grey),
+            ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+            ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+            ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+            ('BACKGROUND', (0, 1), (-1, -1), colors.beige),
+            ('GRID', (0, 0), (-1, -1), 1, colors.black)
+        ]
+
+        # Create a list to hold the elements of the PDF document
+        elements = []
+
+        # Define a page template with frames for header and footer
+        frame_time = Frame(36, 36, doc.width - 72, doc.height - 72)
+        frame_address = Frame(36, 36, doc.width - 72, doc.height - 72)
+        template = PageTemplate(id='custom', frames=[frame_time, frame_address])
+
+        # Define header and footer content
+        def header(canvas, doc):
+            canvas.setFont('Helvetica', 12)
+            canvas.drawString(doc.width - 250, doc.height + 80, "Prajwal International School")
+            canvas.drawString(doc.width - 200, doc.height + 50, "CBSE Bangalore")
+            # Add any other header elements as needed
+
+        def footer(canvas, doc):
+            canvas.setFont('Helvetica', 10)
+            canvas.drawString(36, 36, f"Report Generation Time: {generation_time}")
+            canvas.drawString(doc.width - 200, 50, "End")
+            # Add any other footer elements as needed
+
+        template.beforeDrawPage = header
+        template.afterDrawPage = footer
+        doc.addPageTemplates([template])
+
+        # Add the student name
+        stud_name_text = f"Attendance Percentage: {student_name}"
+        stud_name_paragraph = Paragraph(stud_name_text, normal_style)
+        elements.append(stud_name_paragraph)
+        elements.append(Spacer(1, 12))
+
+        # Add the attendance percentage
+        attendance_text = f"Attendance Percentage: {attendance_percentage:.1f}%"
+        attendance_paragraph = Paragraph(attendance_text, normal_style)
+        elements.append(attendance_paragraph)
+        elements.append(Spacer(1, 12))
+
+        # Add the grade report table
+        grade_data = [["Course", "Marks", "Grade"]]
+        for course, marks, grade in grade_report:
+            grade_data.append([course, str(marks), grade])
+
+        grade_table = Table(grade_data, colWidths=[150, 50, 50])
+        grade_table.setStyle(table_style)
+        elements.append(grade_table)
+        elements.append(Spacer(1, 12))
+
+        # Add total marks and total percentage
+        total_marks_text = f"Total Marks: {total_marks}"
+        total_percentage_text = f"Total Percentage: {total_percentage:.1f}%"
+        total_marks_paragraph = Paragraph(total_marks_text, normal_style)
+        total_percentage_paragraph = Paragraph(total_percentage_text, normal_style)
+        elements.append(total_marks_paragraph)
+        elements.append(total_percentage_paragraph)
+
+        # Add "All the best" centered
+        all_the_best_text = "<b>All the best</b>"
+        all_the_best_paragraph = Paragraph(all_the_best_text, normal_style)
+        elements.append(Spacer(1, 12))
+        elements.append(all_the_best_paragraph)
+
+        # Build the PDF document
+        doc.build(elements)
+
+        messagebox.showinfo("Report Generated", f"The report has been saved as {pdf_filename}")
+
+    except Exception as e:
+        messagebox.showerror("Error", f"An error occurred: {str(e)}")
+
+
+def view_report(student_id):
+    global student_name
+    if student_id is not None:
+        attendance_percentage = fetch_student_total_attendance_percentage(student_id)
+        grade_report, total_marks, total_percentage = fetch_student_grade_report(student_id)
+        conn = sqlite3.connect("school_database.db")
+        cursor = conn.cursor()
+        cursor.execute("SELECT first_name, last_name FROM students WHERE student_id=?", (student_id,))
+        student_data = cursor.fetchone()
+        try:
+            first_name, last_name = student_data
+            student_name = f"{first_name} {last_name}"
+        except Exception as e:
+            messagebox.showerror("Error", f"No Student Data: {str(e)}")
+
+        # Close the database connection
+        conn.close()
+        generate_pdf_report(student_name, attendance_percentage, grade_report, total_marks, total_percentage)

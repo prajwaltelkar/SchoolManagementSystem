@@ -103,3 +103,16 @@ def authenticate_student(student_id, student_password):
 
     # If the query result is 1, it means the student with the provided ID and password exists
     return result[0] == 1
+
+
+def center_window(root, width, height):
+    # Get the screen width and height
+    screen_width = root.winfo_screenwidth()
+    screen_height = root.winfo_screenheight()
+
+    # Calculate the x and y coordinates to center the window
+    x = (screen_width - width) // 2
+    y = (screen_height - height) // 2
+
+    # Set the window's geometry to be centered on the screen
+    root.geometry(f"{width}x{height}+{x}+{y}")
