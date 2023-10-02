@@ -7,9 +7,10 @@ from tkinter import simpledialog
 
 
 class AttendanceSystem:
-    def __init__(self):
+    def __init__(self, employee_id):
 
         # Initialize tkinter
+        self.employee_id = employee_id
         self.conn = sqlite3.connect("school_database.db")
         self.cursor = self.conn.cursor()
         self.attendance_window = tk.Toplevel()
@@ -96,13 +97,36 @@ class AttendanceSystem:
         student_id = self.student_ids[self.student_names.index(selected_student)]
         status = self.status_var.get()
 
-        # Insert attendance data into the database
-        self.cursor.execute("INSERT INTO attendance (student_id, date, status) VALUES (?, ?, ?)",
-                            (student_id, date, status))
-        self.conn.commit()
+        # # Insert attendance data into the database
+        # self.cursor.execute("INSERT INTO attendance (student_id, date, status) VALUES (?, ?, ?)",
+        #                     (student_id, date, status))
+        # self.conn.commit()
+        #
+        # # Clear the status variable
+        # self.status_var.set("Absent")
 
-        # Clear the status variable
-        self.status_var.set("Absent")
+        # Check if the logged-in employee is authorized to take attendance for the selected class
+        authorized = self.is_employee_authorized(self.employee_id, selected_class)
+
+        if authorized:
+            # Insert attendance data into the database
+            self.cursor.execute("INSERT INTO attendance (student_id, date, status) VALUES (?, ?, ?)",
+                                (student_id, date, status))
+            self.conn.commit()
+            messagebox.showinfo("Attendance Marked", f"Attendance for {selected_student} marked successfully.")
+        else:
+            messagebox.showinfo("Authorization Error", "You are not authorized to mark attendance for this class.")
+
+    # Function to check if the employee is authorized to take attendance for the selected class
+    def is_employee_authorized(self, employee_id, selected_class):
+        class_id = self.cursor.execute("SELECT class_id FROM class WHERE class_name=?", (selected_class,)).fetchone()
+        if class_id:
+            class_id = class_id[0]
+            # Check if there is a record in the employee_class table with the given employee_id and class_id
+            record_exists = self.cursor.execute("SELECT * FROM employee_class WHERE employee_id=? AND class_id=?",
+                                                (employee_id, class_id)).fetchone()
+            return bool(record_exists)
+        return False
 
 
 class AttendanceViewer:

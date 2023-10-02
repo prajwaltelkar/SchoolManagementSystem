@@ -181,7 +181,7 @@ class EmployeeClassAssignment:
         class_id = self.class_id_entry.get()
 
         # Check if the employee with the given ID exists and is a teacher
-        cursor.execute("SELECT * FROM employees WHERE employee_id = ? AND role = 'teacher'", (employee_id,))
+        cursor.execute("SELECT * FROM employees WHERE employee_id = ? AND role = 'Teacher'", (employee_id,))
         employee = cursor.fetchone()
 
         if employee:
