@@ -151,3 +151,128 @@ def center_window(root, width, height):
 
     # Set the window's geometry to be centered on the screen
     root.geometry(f"{width}x{height}+{x}+{y}")
+
+
+class EmployeeClassAssignment:
+    def __init__(self):
+        self.window = tk.Toplevel()
+        self.window.title("Assign Employee to Class")
+
+        # Create and pack entry fields for assignment attributes
+        self.employee_id_label = tk.Label(self.window, text="Employee ID")
+        self.employee_id_label.pack()
+        self.employee_id_entry = tk.Entry(self.window)
+        self.employee_id_entry.pack()
+
+        self.class_id_label = tk.Label(self.window, text="Class ID:")
+        self.class_id_label.pack()
+        self.class_id_entry = tk.Entry(self.window)
+        self.class_id_entry.pack()
+
+        # Create the "Assign" button and bind it to the assign_employee_to_class method
+        self.assign_button = tk.Button(self.window, text="Assign", command=self.assign_employee_to_class)
+        self.assign_button.pack()
+
+    def assign_employee_to_class(self):
+        conn = sqlite3.connect("school_database.db")
+        cursor = conn.cursor()
+
+        employee_id = self.employee_id_entry.get()
+        class_id = self.class_id_entry.get()
+
+        # Check if the employee with the given ID exists and is a teacher
+        cursor.execute("SELECT * FROM employees WHERE employee_id = ? AND role = 'teacher'", (employee_id,))
+        employee = cursor.fetchone()
+
+        if employee:
+            # If the employee is a teacher, assign them to the class
+            cursor.execute("INSERT INTO employee_class (employee_id, class_id) VALUES (?, ?)",
+                           (employee_id, class_id))
+            conn.commit()
+            conn.close()
+            self.window.destroy()
+            messagebox.showinfo("Successful", "Employee-Class Assignment Successful!")
+        else:
+            conn.close()
+            messagebox.showerror("Error", "Employee not found or not a teacher.")
+
+
+def show_employee_class_records():
+    # Create a new window for displaying records
+    records_window = tk.Toplevel()
+    records_window.title("Employee Class Assignment Database")
+
+    # Create a treeview widget to display records
+    tree = ttk.Treeview(records_window, columns=("Employee ID", "Class ID"))
+    tree.heading("#0", text="Employee-Class Assignment Record")
+    tree.heading("#1", text="Employee ID")
+    tree.heading("#2", text="Class ID")
+
+    # Create horizontal scrollbar
+    xscroll = ttk.Scrollbar(records_window, orient=tk.HORIZONTAL, command=tree.xview)
+    xscroll.pack(side=tk.BOTTOM, fill=tk.X)
+    tree.configure(xscrollcommand=xscroll.set)
+
+    # Fetch employee-class assignment records from the database
+    conn = sqlite3.connect("school_database.db")
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM employee_class")
+    records = cursor.fetchall()
+    conn.close()
+
+    # Insert employee-class assignment records into the treeview
+    for record in records:
+        tree.insert("", "end", values=record)
+
+    # Adjust column widths based on content
+    for col in tree["columns"]:
+        tree.column(col, width=tkfont.Font().measure(col) + 10)  # Adjust the width as needed
+
+    tree.pack(fill=tk.BOTH, expand=True)
+
+
+def delete_all_employee_class_records():
+    confirmation = messagebox.askquestion("Delete All Records",
+                                          "Are you sure you want to delete all Employee-Class Assignment records?")
+    if confirmation == 'yes':
+        conn = sqlite3.connect("school_database.db")
+        cursor = conn.cursor()
+        cursor.execute("DELETE FROM employee_class")
+        conn.commit()
+        conn.close()
+        messagebox.showinfo("Deletion Successful", "All Employee-Class Assignment records have been deleted.")
+
+
+def delete_employee_class_record():
+    # Create a Tkinter window
+    employee_class_window = tk.Tk()
+    employee_class_window.withdraw()  # Hide the main window
+
+    # Prompt the user for employee_id and class_id using simpledialog
+    employee_id = simpledialog.askinteger("Input", "Enter Employee ID:")
+    class_id = simpledialog.askinteger("Input", "Enter Class ID:")
+
+    if employee_id is not None and class_id is not None:
+        confirmation = messagebox.askquestion("Delete Employee-Class Assignment",
+                                              f"Are you sure you want to delete the Employee ID-"
+                                              f"{employee_id} Class ID-{class_id} assignment from the"
+                                              f" Employee-Class assignments?")
+        if confirmation == 'yes':
+            conn = sqlite3.connect("school_database.db")
+            cursor = conn.cursor()
+
+            # Delete the employee_class assignment record for the specified employee_id and class_id
+            cursor.execute("DELETE FROM employee_class WHERE employee_id = ? AND class_id = ?",
+                           (employee_id, class_id))
+
+            conn.commit()
+            conn.close()
+            messagebox.showinfo("Deletion Successful", f"Employee-Class assignment for Employee ID"
+                                                       f" {employee_id} and Class ID {class_id} has been deleted.")
+        else:
+            messagebox.showinfo("Deletion Canceled", "Employee-Class assignment has not been deleted.")
+    else:
+        messagebox.showinfo("Invalid Input", "Please provide valid Employee ID and Class ID.")
+
+    # Close the Tkinter window
+    employee_class_window.destroy()

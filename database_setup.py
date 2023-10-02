@@ -147,3 +147,17 @@ def create_grade_table():
                     )''')
     conn.commit()
     conn.close()
+
+
+def create_employee_class_table():
+    conn = sqlite3.connect("school_database.db")
+    cursor = conn.cursor()
+    cursor.execute('''CREATE TABLE IF NOT EXISTS employee_class (
+                    employee_id INTEGER,
+                    class_id INTEGER,
+                    PRIMARY KEY (employee_id, class_id),
+                    FOREIGN KEY (employee_id) REFERENCES employees (employee_id),
+                    FOREIGN KEY (class_id) REFERENCES class (class_id)
+                    )''')
+    conn.commit()
+    conn.close()
