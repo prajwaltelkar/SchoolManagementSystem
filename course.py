@@ -2,7 +2,7 @@ import sqlite3
 import tkinter as tk
 from tkinter import ttk
 import tkinter.font as tkfont
-from tkinter import messagebox
+from tkinter import messagebox, simpledialog
 
 
 class Course:
@@ -91,6 +91,38 @@ def show_course_records():
         tree.column(col, width=tkfont.Font().measure(col) + 10)  # Adjust the width as needed
 
     tree.pack(fill=tk.BOTH, expand=True)
+
+
+def delete_course():
+    # Create a Tkinter window
+    course_window = tk.Tk()
+    course_window.withdraw()  # Hide the main window
+
+    # Prompt the user for course_id using simpledialog
+    course_id = simpledialog.askinteger("Input", "Enter Course ID:")
+
+    if course_id is not None:
+        confirmation = messagebox.askquestion("Delete Course",
+                                              f"Are you sure you want to delete Course ID "
+                                              f" {course_id} from the Courses?")
+        if confirmation == 'yes':
+            conn = sqlite3.connect("school_database.db")
+            cursor = conn.cursor()
+
+            # Delete the course record for the specified course_id
+            cursor.execute("DELETE FROM course WHERE course_id = ?", (course_id,))
+
+            conn.commit()
+            conn.close()
+            messagebox.showinfo("Deletion Successful", f"Course record with ID "
+                                                       f" {course_id} has been deleted.")
+        else:
+            messagebox.showinfo("Deletion Canceled", "Course record has not been deleted.")
+    else:
+        messagebox.showinfo("Invalid Input", "Please provide a valid Course ID.")
+
+    # Close the Tkinter window
+    course_window.destroy()
 
 
 def delete_all_course_records():

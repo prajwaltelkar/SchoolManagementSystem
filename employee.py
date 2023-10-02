@@ -4,6 +4,7 @@ from tkinter import ttk
 import tkinter.font as tkfont
 from tkinter import messagebox
 from tkinter import scrolledtext
+from tkinter import simpledialog
 
 
 class Employee:
@@ -122,6 +123,33 @@ def show_employee_records():
         tree.column(col, width=tkfont.Font().measure(col) + 10)  # Adjust the width as needed
 
     tree.pack(fill=tk.BOTH, expand=True)
+
+
+def delete_employee():
+    # Create a Tkinter window
+    employee_window = tk.Tk()
+    employee_window.withdraw()
+
+    # Prompt the user for employee_id using simpledialog
+    employee_id = simpledialog.askinteger("Input", "Enter Employee ID:")
+
+    if employee_id is not None:
+        confirmation = messagebox.askquestion("Delete Employee",
+                                              f"Are you sure you want to delete Employee ID {employee_id} from the Employee records?")
+        if confirmation == 'yes':
+            conn = sqlite3.connect("school_database.db")
+            cursor = conn.cursor()
+            cursor.execute("DELETE FROM employees WHERE employee_id = ?", (employee_id,))
+            conn.commit()
+            conn.close()  # Close the database connection
+            messagebox.showinfo("Deletion Successful", f"Employee record with ID {employee_id} has been deleted.")
+        else:
+            messagebox.showinfo("Deletion Canceled", "Employee record has not been deleted.")
+    else:
+        messagebox.showinfo("Invalid Input", "Please provide a valid Employee ID.")
+
+    # Close the Tkinter window
+    employee_window.destroy()
 
 
 def delete_all_employee_records():

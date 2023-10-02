@@ -3,6 +3,7 @@ from tkinter import ttk
 import sqlite3
 import tkinter.font as tkfont
 from tkinter import messagebox
+from tkinter import simpledialog
 
 
 class AttendanceSystem:
@@ -200,6 +201,32 @@ def show_attendance_records():
         tree.column(col, width=tkfont.Font().measure(col) + 10)  # Adjust the width as needed
 
     tree.pack(fill=tk.BOTH, expand=True)
+
+
+def delete_attendance():
+    attendance_window = tk.Tk()
+    attendance_window.withdraw()  # Hide the main window
+
+    # Prompt the user for student_id and date using simpledialog
+    student_id = simpledialog.askinteger("Input", "Enter Student ID:")
+    date = simpledialog.askstring("Input", "Enter Date (DD-MM-YYYY):")
+
+    if student_id is not None and date is not None:
+        confirmation = messagebox.askquestion("Delete Attendance",
+                                              f"Are you sure you want to delete {student_id}"
+                                              f" Attendance record on {date}?")
+        if confirmation == 'yes':
+            conn = sqlite3.connect("school_database.db")
+            cursor = conn.cursor()
+            cursor.execute("DELETE FROM attendance WHERE student_id = ? AND date = ?",
+                           (student_id, date))
+            conn.commit()
+            messagebox.showinfo("Deletion Successful", "Attendance record has been deleted.")
+    else:
+        messagebox.showinfo("Deletion Unsuccessful", "Attendance record has not been deleted.")
+
+    # Close the Tkinter window
+    attendance_window.destroy()
 
 
 def delete_all_attendance_records():

@@ -2,7 +2,7 @@ import sqlite3
 from tkinter import ttk
 import tkinter as tk
 import tkinter.font as tkfont
-from tkinter import messagebox
+from tkinter import messagebox, simpledialog
 
 
 class ClassCourses:
@@ -39,7 +39,7 @@ class ClassCourses:
         conn.close()
 
         self.window.destroy()
-        messagebox.showinfo("Successful", "Class Created!")
+        messagebox.showinfo("Successful", "Course-Class Assigned!")
 
 
 def show_class_courses_records():
@@ -74,6 +74,41 @@ def show_class_courses_records():
         tree.column(col, width=tkfont.Font().measure(col) + 10)  # Adjust the width as needed
 
     tree.pack(fill=tk.BOTH, expand=True)
+
+
+def delete_class_course_record():
+    # Create a Tkinter window
+    class_course_window = tk.Tk()
+    class_course_window.withdraw()  # Hide the main window
+
+    # Prompt the user for class_id and course_id using simpledialog
+    class_id = simpledialog.askinteger("Input", "Enter Class ID:")
+    course_id = simpledialog.askinteger("Input", "Enter Course ID:")
+
+    if class_id is not None and course_id is not None:
+        confirmation = messagebox.askquestion("Delete Class-Course Association",
+                                              f"Are you sure you want to delete the Class ID-"
+                                              f"{class_id} Course ID-{course_id} association from the"
+                                              f" Class-Course associations?")
+        if confirmation == 'yes':
+            conn = sqlite3.connect("school_database.db")
+            cursor = conn.cursor()
+
+            # Delete the class_course record for the specified class_id and course_id
+            cursor.execute("DELETE FROM class_courses WHERE class_id = ? AND course_id = ?",
+                           (class_id, course_id))
+
+            conn.commit()
+            conn.close()
+            messagebox.showinfo("Deletion Successful", f"Class-Course association for Class ID"
+                                                       f" {class_id} and Course ID {course_id} has been deleted.")
+        else:
+            messagebox.showinfo("Deletion Canceled", "Class-Course association has not been deleted.")
+    else:
+        messagebox.showinfo("Invalid Input", "Please provide valid Class ID and Course ID.")
+
+    # Close the Tkinter window
+    class_course_window.destroy()
 
 
 def delete_all_class_courses_records():

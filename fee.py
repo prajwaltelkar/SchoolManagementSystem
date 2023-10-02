@@ -1,6 +1,6 @@
 import tkinter as tk
 from tkinter import ttk
-from tkinter import messagebox
+from tkinter import messagebox, simpledialog
 import sqlite3
 import tkinter.font as tkfont
 
@@ -103,6 +103,35 @@ def show_fee_records():
 
     tree.pack(fill=tk.BOTH, expand=True)
 
+
+def delete_fee():
+    # Create a Tkinter window
+    fee_window = tk.Tk()
+    fee_window.withdraw()  # Hide the main window
+
+    # Prompt the user for payment_id using simpledialog
+    payment_id = simpledialog.askinteger("Input", "Enter Payment ID:")
+
+    if payment_id is not None:
+        confirmation = messagebox.askquestion("Delete Fee Payment",
+                                              f"Are you sure you want to delete Payment ID {payment_id} from the Fee Payments?")
+        if confirmation == 'yes':
+            conn = sqlite3.connect("school_database.db")
+            cursor = conn.cursor()
+
+            # Delete the fee payment record for the specified payment_id
+            cursor.execute("DELETE FROM fee_payments WHERE payment_id = ?", (payment_id,))
+
+            conn.commit()
+            conn.close()
+            messagebox.showinfo("Deletion Successful", f"Fee payment record with ID {payment_id} has been deleted.")
+        else:
+            messagebox.showinfo("Deletion Canceled", "Fee payment record has not been deleted.")
+    else:
+        messagebox.showinfo("Invalid Input", "Please provide a valid Payment ID.")
+
+    # Close the Tkinter window
+    fee_window.destroy()
 
 def delete_all_fee_records():
     confirmation = messagebox.askquestion("Delete All Records",

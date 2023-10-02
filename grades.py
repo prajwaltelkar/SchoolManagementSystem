@@ -189,6 +189,39 @@ def show_grades_records():
     tree.pack(fill=tk.BOTH, expand=True)
 
 
+def delete_grade():
+    # Create a Tkinter window
+    grade_window = tk.Tk()
+    grade_window.withdraw()  # Hide the main window
+
+    # Prompt the user for student_id and course_id using simpledialog
+    student_id = simpledialog.askinteger("Input", "Enter Student ID:")
+    course_id = simpledialog.askinteger("Input", "Enter Course ID:")
+
+    if student_id is not None and course_id is not None:
+        confirmation = messagebox.askquestion("Delete Grade",
+                                              f"Are you sure you want to delete the grade record for Student ID "
+                                              f" {student_id} and Course ID {course_id} from the Grades?")
+        if confirmation == 'yes':
+            conn = sqlite3.connect("school_database.db")
+            cursor = conn.cursor()
+
+            # Delete the grade record for the specified student_id and course_id
+            cursor.execute("DELETE FROM grades WHERE student_id = ? AND course_id = ?",
+                           (student_id, course_id))
+            conn.commit()
+            conn.close()
+            messagebox.showinfo("Deletion Successful", f"Grade record for Student ID {student_id} "
+                                                       f" and Course ID {course_id} has been deleted.")
+        else:
+            messagebox.showinfo("Deletion Canceled", "Grade record has not been deleted.")
+    else:
+        messagebox.showinfo("Invalid Input", "Please provide valid Student ID and Course ID.")
+
+    # Close the Tkinter window
+    grade_window.destroy()
+
+
 def delete_all_grades_records():
     confirmation = messagebox.askquestion("Delete All Records",
                                           "Are you sure you want to delete all grade records?")
