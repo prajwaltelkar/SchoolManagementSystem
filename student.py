@@ -527,7 +527,7 @@ def generate_pdf_report(student_name, attendance_percentage, grade_report, total
         doc.addPageTemplates([template])
 
         # Add the student name
-        stud_name_text = f"Attendance Percentage: {student_name}"
+        stud_name_text = f"Student Name: {student_name}"
         stud_name_paragraph = Paragraph(stud_name_text, normal_style)
         elements.append(stud_name_paragraph)
         elements.append(Spacer(1, 12))

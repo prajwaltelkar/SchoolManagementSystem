@@ -6,7 +6,8 @@ from tkinter import messagebox
 
 
 class GradeAssignmentApp:
-    def __init__(self):
+    def __init__(self, employee_id):
+        self.employee_id = employee_id
         self.conn = sqlite3.connect("school_database.db")
         self.cursor = self.conn.cursor()
 
@@ -70,14 +71,24 @@ class GradeAssignmentApp:
     def enter_grades_and_marks(self):
         selected_course = self.course_combo.get()
 
+        # Check if the logged-in user is an employee associated with the selected course
+        self.cursor.execute(
+            "SELECT COUNT(*) FROM course WHERE course_id = (SELECT course_id FROM course WHERE course_name=?) AND employee_id=?",
+            (selected_course, self.employee_id))
+        is_employee_associated = self.cursor.fetchone()[0] > 0
+
+        if not is_employee_associated:
+            messagebox.showerror("Access Denied", "You do not have permission to assign grades for this course.")
+            return
+
         for i in self.student_listbox.curselection():
             student_name = self.student_listbox.get(i)
             student_id = self.cursor.execute("SELECT student_id FROM students WHERE first_name || ' ' || last_name=?",
                                              (student_name,)).fetchone()[0]
 
-            grade_entry = simpledialog.askstring("Enter Grade", f"Enter grade for {student_name} in {selected_course}:")
             marks_entry = simpledialog.askinteger("Enter Marks",
                                                   f"Enter marks for {student_name} in {selected_course}:")
+            grade_entry = simpledialog.askstring("Enter Grade", f"Enter grade for {student_name} in {selected_course}:")
 
             if grade_entry is not None and marks_entry is not None:
                 self.cursor.execute(
