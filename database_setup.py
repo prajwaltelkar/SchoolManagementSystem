@@ -1,10 +1,9 @@
 import sqlite3
 
-conn = sqlite3.connect("school_database.db")
-
 
 # Create a table to store employee information
 def create_employee_table():
+    conn = sqlite3.connect("school_database.db")
     cursor = conn.cursor()
     cursor.execute('''CREATE TABLE IF NOT EXISTS employees (
                     employee_id INTEGER PRIMARY KEY,
