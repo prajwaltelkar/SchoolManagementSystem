@@ -6,9 +6,11 @@ from tkinter import messagebox, simpledialog
 
 
 class ClassRoom:
-    def __init__(self):
+    def __init__(self, db_connection):
         self.class_window = tk.Toplevel()
         self.class_window.title("Create Class")
+
+        self.conn = db_connection
 
         # Create and pack entry fields for class attributes
         self.class_id_label = tk.Label(self.class_window, text="Class ID")
@@ -26,20 +28,21 @@ class ClassRoom:
         self.save_button.pack()
 
     def save_classroom(self):
-        conn = sqlite3.connect("school_database.db")
-        cursor = conn.cursor()
+        try:
+            cursor = self.conn.cursor()
 
-        class_id = self.class_id_entry.get()
-        class_name = self.class_name_entry.get()
+            class_id = self.class_id_entry.get()
+            class_name = self.class_name_entry.get()
 
-        cursor.execute("INSERT INTO class (class_id, class_name) VALUES (?, ?)",
-                       (class_id, class_name))
+            cursor.execute("INSERT INTO class (class_id, class_name) VALUES (?, ?)",
+                           (class_id, class_name))
 
-        conn.commit()
-        conn.close()
+            self.conn.commit()
 
-        self.class_window.destroy()
-        messagebox.showinfo("Successful", "Class Created!")
+            self.class_window.destroy()
+            messagebox.showinfo("Successful", "Class Created!")
+        except sqlite3.Error as error:
+            messagebox.showerror("Error", str(error))
 
 
 def show_class_records():
@@ -59,11 +62,14 @@ def show_class_records():
     tree.configure(xscrollcommand=xscroll.set)
 
     # Fetch Class records from the database
-    conn = sqlite3.connect("school_database.db")
-    cursor = conn.cursor()
-    cursor.execute("SELECT * FROM class")
-    class_records = cursor.fetchall()
-    conn.close()
+    try:
+        conn = sqlite3.connect("school_database.db")
+        cursor = conn.cursor()
+        cursor.execute("SELECT * FROM class")
+        class_records = cursor.fetchall()
+        conn.close()
+    except sqlite3.Error as error:
+        messagebox.showerror("Error", str(error))
 
     # Insert Class records into the treeview
     for record in class_records:
@@ -76,7 +82,7 @@ def show_class_records():
     tree.pack(fill=tk.BOTH, expand=True)
 
 
-def delete_class():
+def delete_class(conn):
     # Create a Tkinter window
     class_window = tk.Tk()
     class_window.withdraw()  # Hide the main window
@@ -88,30 +94,47 @@ def delete_class():
         confirmation = messagebox.askquestion("Delete Class",
                                               f"Are you sure you want to delete Class ID {class_id} from the Classes?")
         if confirmation == 'yes':
-            conn = sqlite3.connect("school_database.db")
-            cursor = conn.cursor()
+            try:
+                cursor = conn.cursor()
 
-            # Delete the class record for the specified class_id
-            cursor.execute("DELETE FROM class WHERE class_id = ?", (class_id,))
+                # Delete the class record for the specified class_id
+                cursor.execute("DELETE FROM class WHERE class_id = ?", (class_id,))
+                conn.commit()
 
-            conn.commit()
-            conn.close()
-            messagebox.showinfo("Deletion Successful", f"Class record with ID {class_id} has been deleted.")
+                if cursor.rowcount > 0:
+                    messagebox.showinfo("Deletion Successful", f"Class record with ID {class_id} has been deleted.")
+                else:
+                    messagebox.showerror("Invalid Input", f"No such Class record.")
+            except sqlite3.Error as error:
+                conn.rollback()  # Rollback the transaction in case of an error
+                messagebox.showerror("Error", str(error))
         else:
-            messagebox.showinfo("Deletion Canceled", "Class record has not been deleted.")
+            messagebox.showerror("Deletion Canceled", "Class record has not been deleted.")
     else:
-        messagebox.showinfo("Invalid Input", "Please provide a valid Class ID.")
+        messagebox.showerror("Invalid Input", "Please provide a valid Class ID.")
 
     # Close the Tkinter window
     class_window.destroy()
 
 
-def delete_all_class_records():
-    confirmation = messagebox.askquestion("Delete All Records",
-                                          "Are you sure you want to delete all Class records?")
-    if confirmation == 'yes':
-        conn = sqlite3.connect("school_database.db")
-        cursor = conn.cursor()
-        cursor.execute("DELETE FROM class")
-        conn.commit()
-        messagebox.showinfo("Deletion Successful", "All Class records have been deleted.")
+def delete_all_class_records(conn):
+    cursor = conn.cursor()
+    cursor.execute("SELECT COUNT(*) FROM class")
+    count = cursor.fetchone()[0]
+
+    if count == 0:
+        messagebox.showerror("No Records", "There are no Course records to delete.")
+    else:
+        confirmation = messagebox.askquestion("Delete All Records",
+                                              "Are you sure you want to delete all Class records?")
+        if confirmation == 'yes':
+            try:
+                cursor = conn.cursor()
+                cursor.execute("DELETE FROM class")
+                conn.commit()
+                messagebox.showinfo("Deletion Successful", "All Class records have been deleted.")
+            except sqlite3.Error as error:
+                conn.rollback()
+                messagebox.showerror("Error", str(error))
+        else:
+            messagebox.showerror("Deletion Canceled", "No Course records have been deleted.")

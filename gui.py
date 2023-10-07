@@ -166,7 +166,8 @@ class LoginPage:
                                                                                                               column=2)
         tk.Label(self.admin_window, text="Class-Course", font=(font_name, font_size, font_style), bg="#87CEEB").grid(
             row=4, column=3)
-        tk.Label(self.admin_window, text="Assign Class\nTeacher", font=(font_name, font_size, font_style), bg="#87CEEB").grid(
+        tk.Label(self.admin_window, text="Assign Class\nTeacher", font=(font_name, font_size, font_style),
+                 bg="#87CEEB").grid(
             row=4, column=4)
         tk.Label(self.admin_window, text="Student", font=(font_name, font_size, font_style), bg="#87CEEB").grid(row=4,
                                                                                                                 column=5)
@@ -174,7 +175,8 @@ class LoginPage:
                                                                                                             column=6)
         tk.Label(self.admin_window, text="Student\nNotice", font=(font_name, font_size, font_style), bg="#87CEEB").grid(
             row=4, column=7)
-        tk.Label(self.admin_window, text="Employee\nNotice", font=(font_name, font_size, font_style), bg="#87CEEB").grid(
+        tk.Label(self.admin_window, text="Employee\nNotice", font=(font_name, font_size, font_style),
+                 bg="#87CEEB").grid(
             row=4, column=8)
         tk.Label(self.admin_window, text="Attendance", font=(font_name, font_size, font_style), bg="#87CEEB").grid(
             row=4, column=9)
@@ -190,24 +192,24 @@ class LoginPage:
         ]
 
         course_buttons = [
-            ("Create Course", Course),
+            ("Create Course", lambda: Course(self.conn)),
             ("Show Course Records", show_course_records),
-            ("Delete Course Record", delete_course),
-            ("Delete All Course\nRecords", delete_all_course_records)
+            ("Delete Course Record", lambda: delete_course(self.conn)),
+            ("Delete All Course\nRecords", lambda: delete_all_course_records(self.conn))
         ]
 
         class_buttons = [
-            ("Create Class", ClassRoom),
+            ("Create Class", lambda: ClassRoom(self.conn)),
             ("Show Class Records", show_class_records),
-            ("Delete Class Records", delete_class),
-            ("Delete All Class\nRecords", delete_all_class_records)
+            ("Delete Class Records", lambda: delete_class(self.conn)),
+            ("Delete All Class\nRecords", lambda: delete_all_class_records(self.conn))
         ]
 
         employee_class_buttons = [
-            ("Assign Class Teacher", EmployeeClassAssignment),
+            ("Assign Class Teacher", lambda: EmployeeClassAssignment(self.conn)),
             ("Show Class Teacher\nRecords", show_employee_class_records),
-            ("Unassign Class Teacher", delete_employee_class_record),
-            ("Unassign All Class\nTeacher", delete_all_employee_class_records)
+            ("Unassign Class Teacher", lambda: delete_employee_class_record(self.conn)),
+            ("Unassign All Class\nTeacher", lambda: delete_all_employee_class_records(self.conn))
         ]
 
         student_buttons = [
@@ -253,10 +255,10 @@ class LoginPage:
         ]
 
         class_course_buttons = [
-            ("Assign Courses to\nClass", ClassCourses),
+            ("Assign Courses to\nClass", lambda: ClassCourses(self.conn)),
             ("Show Courses to\nClass Assignment", show_class_courses_records),
-            ("Delete Courses to\nClass Assignment", delete_class_course_record),
-            ("Delete All Courses to\nClass Assignment", delete_all_class_courses_records)
+            ("Delete Courses to\nClass Assignment", lambda: delete_class_course_record(self.conn)),
+            ("Delete All Courses to\nClass Assignment", lambda: delete_all_class_courses_records(self.conn))
         ]
 
         self.create_buttons(employee_buttons, row_start=5, col_start=0)
@@ -320,13 +322,16 @@ class LoginPage:
         tk.Label(self.employee_window, text="Teacher", font=("Helvetica", 24, "bold"), bg="#87CEEB").grid(row=1,
                                                                                                           column=0,
                                                                                                           columnspan=20)
-        tk.Label(self.employee_window, text="Attendance", font=(font_name, font_size, font_style), bg="#87CEEB").grid(row=3, column=0)
-        tk.Label(self.employee_window, text="Grades", font=(font_name, font_size, font_style), bg="#87CEEB").grid(row=3, column=1)
-        tk.Label(self.employee_window, text="Notice", font=(font_name, font_size, font_style), bg="#87CEEB").grid(row=3, column=2)
+        tk.Label(self.employee_window, text="Attendance", font=(font_name, font_size, font_style), bg="#87CEEB").grid(
+            row=3, column=0)
+        tk.Label(self.employee_window, text="Grades", font=(font_name, font_size, font_style), bg="#87CEEB").grid(row=3,
+                                                                                                                  column=1)
+        tk.Label(self.employee_window, text="Notice", font=(font_name, font_size, font_style), bg="#87CEEB").grid(row=3,
+                                                                                                                  column=2)
 
         # Create buttons for employee actions
         attendance_buttons = [
-            ("Attendance", lambda:AttendanceSystem(self.username)),
+            ("Attendance", lambda: AttendanceSystem(self.username)),
             ("Attendance Viewer", AttendanceViewer),
         ]
 
@@ -353,7 +358,7 @@ class LoginPage:
 
     def create_employee_buttons(self, buttons_info, row_start, col_start):
         for i, (text, command) in enumerate(buttons_info):
-            button = tk.Button(self.employee_window, text=text, command=command,bg="#FDF5E6")
+            button = tk.Button(self.employee_window, text=text, command=command, bg="#FDF5E6")
             button.grid(row=row_start + i, column=col_start, padx=5, pady=5, sticky="nsew")
             self.employee_window.grid_columnconfigure(col_start, weight=1)
 
@@ -387,7 +392,8 @@ class LoginPage:
                  bg="#87CEEB", fg="#00008B").grid(row=0, column=0, columnspan=20)
         tk.Label(self.staff_window, text="Staff", font=("Helvetica", 20, "bold"), bg="#87CEEB").grid(row=1, column=0,
                                                                                                      columnspan=20)
-        tk.Label(self.staff_window, text="View Notice", font=(font_name, font_size, font_style), bg="#87CEEB").grid(row=3, column=0)
+        tk.Label(self.staff_window, text="View Notice", font=(font_name, font_size, font_style), bg="#87CEEB").grid(
+            row=3, column=0)
 
         employee_notice_buttons = [
             ("View Employee Notice", lambda: display_employee_notices(self.username))
@@ -438,14 +444,23 @@ class LoginPage:
         # Create buttons for notice viewer
         tk.Label(self.student_window, text="Prajwal S Telkar International School", font=("Helvetica", 24, "bold"),
                  bg="#87CEEB", fg="#00008B").grid(row=0, column=0, columnspan=20)
-        tk.Label(self.student_window, text="Student", font=("Helvetica", 20, "bold"), bg="#87CEEB").grid(row=1, column=0, columnspan=20)
-        tk.Label(self.student_window, text="Class", font=(font_name, font_size, font_style), bg="#87CEEB").grid(row=3, column=0)
-        tk.Label(self.student_window, text="Course", font=(font_name, font_size, font_style), bg="#87CEEB").grid(row=3, column=1)
-        tk.Label(self.student_window, text="Attendance", font=(font_name, font_size, font_style), bg="#87CEEB").grid(row=3, column=2)
-        tk.Label(self.student_window, text="Notice", font=(font_name, font_size, font_style), bg="#87CEEB").grid(row=3, column=3)
-        tk.Label(self.student_window, text="Fee Payment", font=(font_name, font_size, font_style), bg="#87CEEB").grid(row=3, column=4)
-        tk.Label(self.student_window, text="Grades", font=(font_name, font_size, font_style), bg="#87CEEB").grid(row=3, column=5)
-        tk.Label(self.student_window, text="Report", font=(font_name, font_size, font_style), bg="#87CEEB").grid(row=3, column=6)
+        tk.Label(self.student_window, text="Student", font=("Helvetica", 20, "bold"), bg="#87CEEB").grid(row=1,
+                                                                                                         column=0,
+                                                                                                         columnspan=20)
+        tk.Label(self.student_window, text="Class", font=(font_name, font_size, font_style), bg="#87CEEB").grid(row=3,
+                                                                                                                column=0)
+        tk.Label(self.student_window, text="Course", font=(font_name, font_size, font_style), bg="#87CEEB").grid(row=3,
+                                                                                                                 column=1)
+        tk.Label(self.student_window, text="Attendance", font=(font_name, font_size, font_style), bg="#87CEEB").grid(
+            row=3, column=2)
+        tk.Label(self.student_window, text="Notice", font=(font_name, font_size, font_style), bg="#87CEEB").grid(row=3,
+                                                                                                                 column=3)
+        tk.Label(self.student_window, text="Fee Payment", font=(font_name, font_size, font_style), bg="#87CEEB").grid(
+            row=3, column=4)
+        tk.Label(self.student_window, text="Grades", font=(font_name, font_size, font_style), bg="#87CEEB").grid(row=3,
+                                                                                                                 column=5)
+        tk.Label(self.student_window, text="Report", font=(font_name, font_size, font_style), bg="#87CEEB").grid(row=3,
+                                                                                                                 column=6)
 
         # Create buttons for admin actions
         class_buttons = [
@@ -517,6 +532,7 @@ def main():
     root = tk.Tk()
     root.configure(bg="#87CEEB")
     conn = sqlite3.connect("school_database.db")
+    conn.execute("PRAGMA foreign_keys = ON;")
     LoginPage(root, conn)
     root.mainloop()
     conn.close()

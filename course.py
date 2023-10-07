@@ -6,10 +6,12 @@ from tkinter import messagebox, simpledialog
 
 
 class Course:
-    def __init__(self):
+    def __init__(self, db_connection):
         # Create a new window for employee registration
         self.course_window = tk.Toplevel()
         self.course_window.title("Create course")
+
+        self.conn = db_connection
 
         # Create and pack entry fields for course attributes
         course_id_label = tk.Label(self.course_window, text="Course ID")
@@ -37,24 +39,25 @@ class Course:
         self.save_button.pack()
 
     def save_course(self):
-        conn = sqlite3.connect("school_database.db")
-        cursor = conn.cursor()
+        try:
+            cursor = self.conn.cursor()
 
-        course_id = self.course_id_entry.get()
-        course_name = self.course_name_entry.get()
-        course_description = self.course_description_entry.get()
-        employee_id = self.employee_id_entry.get()
+            course_id = self.course_id_entry.get()
+            course_name = self.course_name_entry.get()
+            course_description = self.course_description_entry.get()
+            employee_id = self.employee_id_entry.get()
 
-        cursor.execute('''INSERT INTO course (
-                            course_id, course_name, course_description, employee_id
-                        ) VALUES (?, ?, ?, ?)''',
-                       (course_id, course_name, course_description, employee_id))
+            cursor.execute('''INSERT INTO course (
+                                course_id, course_name, course_description, employee_id
+                            ) VALUES (?, ?, ?, ?)''',
+                           (course_id, course_name, course_description, employee_id))
 
-        self.course_window.destroy()
-        messagebox.showinfo("Successful", "Course Created!")
+            self.course_window.destroy()
+            messagebox.showinfo("Successful", "Course Created!")
 
-        conn.commit()
-        conn.close()
+            self.conn.commit()
+        except sqlite3.Error as error:
+            messagebox.showerror("Error", str(error))
 
 
 def show_course_records():
@@ -76,11 +79,14 @@ def show_course_records():
     tree.configure(xscrollcommand=xscroll.set)
 
     # Fetch Employee records from the database
-    conn = sqlite3.connect("school_database.db")
-    cursor = conn.cursor()
-    cursor.execute("SELECT * FROM course")
-    employee_records = cursor.fetchall()
-    conn.close()
+    try:
+        conn = sqlite3.connect("school_database.db")
+        cursor = conn.cursor()
+        cursor.execute("SELECT * FROM course")
+        employee_records = cursor.fetchall()
+        conn.close()
+    except sqlite3.Error as error:
+        messagebox.showerror("Error", str(error))
 
     # Insert Employee records into the treeview
     for record in employee_records:
@@ -93,7 +99,7 @@ def show_course_records():
     tree.pack(fill=tk.BOTH, expand=True)
 
 
-def delete_course():
+def delete_course(conn):
     # Create a Tkinter window
     course_window = tk.Tk()
     course_window.withdraw()  # Hide the main window
@@ -106,31 +112,47 @@ def delete_course():
                                               f"Are you sure you want to delete Course ID "
                                               f" {course_id} from the Courses?")
         if confirmation == 'yes':
-            conn = sqlite3.connect("school_database.db")
             cursor = conn.cursor()
 
             # Delete the course record for the specified course_id
-            cursor.execute("DELETE FROM course WHERE course_id = ?", (course_id,))
-
-            conn.commit()
-            conn.close()
-            messagebox.showinfo("Deletion Successful", f"Course record with ID "
-                                                       f" {course_id} has been deleted.")
+            try:
+                cursor.execute("DELETE FROM course WHERE course_id = ?", (course_id,))
+                conn.commit()
+                if cursor.rowcount > 0:
+                    messagebox.showinfo("Deletion Successful", f"Course record with ID "
+                                                               f" {course_id} has been deleted.")
+                else:
+                    messagebox.showerror("Invalid Input", "No such Course record.")
+            except sqlite3.Error as error:
+                conn.rollback()  # Rollback the transaction in case of an error
+                messagebox.showerror("Error", str(error))
         else:
-            messagebox.showinfo("Deletion Canceled", "Course record has not been deleted.")
+            messagebox.showerror("Deletion Canceled", "Course record has not been deleted.")
     else:
-        messagebox.showinfo("Invalid Input", "Please provide a valid Course ID.")
+        messagebox.showerror("Invalid Input", "Please provide a valid Course ID.")
 
     # Close the Tkinter window
     course_window.destroy()
 
 
-def delete_all_course_records():
-    confirmation = messagebox.askquestion("Delete All Records",
-                                          "Are you sure you want to delete all Course records?")
-    if confirmation == 'yes':
-        conn = sqlite3.connect("school_database.db")
-        cursor = conn.cursor()
-        cursor.execute("DELETE FROM course")
-        conn.commit()
-        messagebox.showinfo("Deletion Successful", "All Course records have been deleted.")
+def delete_all_course_records(conn):
+    cursor = conn.cursor()
+    cursor.execute("SELECT COUNT(*) FROM course")
+    count = cursor.fetchone()[0]
+
+    if count == 0:
+        messagebox.showerror("No Records", "There are no Course records to delete.")
+    else:
+        confirmation = messagebox.askquestion("Delete All Records",
+                                              "Are you sure you want to delete all Course records?")
+        if confirmation == 'yes':
+            try:
+                cursor.execute("DELETE FROM course")
+                conn.commit()
+                messagebox.showinfo("Deletion Successful", f"{count} Course records have been deleted.")
+            except sqlite3.Error as error:
+                conn.rollback()
+                messagebox.showerror("Error", str(error))
+        else:
+            messagebox.showerror("Deletion Canceled", "No Course records have been deleted.")
+

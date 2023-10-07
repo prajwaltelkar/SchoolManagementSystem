@@ -6,9 +6,11 @@ from tkinter import messagebox, simpledialog
 
 
 class ClassCourses:
-    def __init__(self):
+    def __init__(self, db_connection):
         self.window = tk.Toplevel()
         self.window.title("Assign courses to class")
+
+        self.conn = db_connection
 
         # Create and pack entry fields for class attributes
         self.class_id_label = tk.Label(self.window, text="Class ID")
@@ -26,8 +28,7 @@ class ClassCourses:
         self.save_button.pack()
 
     def save(self):
-        conn = sqlite3.connect("school_database.db")
-        cursor = conn.cursor()
+        cursor = self.conn.cursor()
 
         class_id = self.class_id_entry.get()
         course_id = self.course_id_entry.get()
@@ -35,8 +36,7 @@ class ClassCourses:
         try:
             cursor.execute("INSERT INTO class_courses (class_id, course_id) VALUES (?, ?)",
                            (class_id, course_id))
-            conn.commit()
-            conn.close()
+            self.conn.commit()
             messagebox.showinfo("Successful", "Course-Class Assigned!")
         except sqlite3.Error as error:
             messagebox.showerror("Error", str(error))
@@ -61,11 +61,14 @@ def show_class_courses_records():
     tree.configure(xscrollcommand=xscroll.set)
 
     # Fetch Class records from the database
-    conn = sqlite3.connect("school_database.db")
-    cursor = conn.cursor()
-    cursor.execute("SELECT * FROM class_courses")
-    records = cursor.fetchall()
-    conn.close()
+    try:
+        conn = sqlite3.connect("school_database.db")
+        cursor = conn.cursor()
+        cursor.execute("SELECT * FROM class_courses")
+        records = cursor.fetchall()
+        conn.close()
+    except sqlite3.Error as error:
+        messagebox.showerror("Error", str(error))
 
     # Insert Class records into the treeview
     for record in records:
@@ -78,7 +81,7 @@ def show_class_courses_records():
     tree.pack(fill=tk.BOTH, expand=True)
 
 
-def delete_class_course_record():
+def delete_class_course_record(conn):
     # Create a Tkinter window
     class_course_window = tk.Tk()
     class_course_window.withdraw()  # Hide the main window
@@ -93,17 +96,18 @@ def delete_class_course_record():
                                               f"{class_id} Course ID-{course_id} association from the"
                                               f" Class-Course associations?")
         if confirmation == 'yes':
-            conn = sqlite3.connect("school_database.db")
-            cursor = conn.cursor()
+            try:
+                cursor = conn.cursor()
 
-            # Delete the class_course record for the specified class_id and course_id
-            cursor.execute("DELETE FROM class_courses WHERE class_id = ? AND course_id = ?",
-                           (class_id, course_id))
+                # Delete the class_course record for the specified class_id and course_id
+                cursor.execute("DELETE FROM class_courses WHERE class_id = ? AND course_id = ?",
+                               (class_id, course_id))
 
-            conn.commit()
-            conn.close()
-            messagebox.showinfo("Deletion Successful", f"Class-Course association for Class ID"
-                                                       f" {class_id} and Course ID {course_id} has been deleted.")
+                conn.commit()
+                messagebox.showinfo("Deletion Successful", f"Class-Course association for Class ID"
+                                                           f" {class_id} and Course ID {course_id} has been deleted.")
+            except sqlite3.Error as error:
+                messagebox.showerror("Error", str(error))
         else:
             messagebox.showinfo("Deletion Canceled", "Class-Course association has not been deleted.")
     else:
@@ -113,30 +117,35 @@ def delete_class_course_record():
     class_course_window.destroy()
 
 
-def delete_all_class_courses_records():
+def delete_all_class_courses_records(conn):
     confirmation = messagebox.askquestion("Delete All Records",
                                           "Are you sure you want to delete all Class records?")
     if confirmation == 'yes':
-        conn = sqlite3.connect("school_database.db")
-        cursor = conn.cursor()
-        cursor.execute("DELETE FROM class_courses")
-        conn.commit()
-        messagebox.showinfo("Deletion Successful", "All Class records have been deleted.")
+        try:
+            cursor = conn.cursor()
+            cursor.execute("DELETE FROM class_courses")
+            conn.commit()
+            messagebox.showinfo("Deletion Successful", "All Class records have been deleted.")
+        except sqlite3.Error as error:
+            messagebox.showerror("Error", str(error))
 
 
 # Login authentication
 def authenticate_student(student_id, student_password):
-    conn = sqlite3.connect("school_database.db")
-    cursor = conn.cursor()
+    try:
+        conn = sqlite3.connect("school_database.db")
+        cursor = conn.cursor()
 
-    # Execute a query to check if the student ID and password match
-    cursor.execute(
-        "SELECT COUNT(*) FROM students WHERE student_id = CAST(:student_id AS INTEGER) AND password = :password",
-        {"student_id": student_id, "password": student_password})
+        # Execute a query to check if the student ID and password match
+        cursor.execute(
+            "SELECT COUNT(*) FROM students WHERE student_id = CAST(:student_id AS INTEGER) AND password = :password",
+            {"student_id": student_id, "password": student_password})
 
-    result = cursor.fetchone()
+        result = cursor.fetchone()
 
-    conn.close()
+        conn.close()
+    except sqlite3.Error as error:
+        messagebox.showerror("Error", str(error))
 
     # If the query result is 1, it means the student with the provided ID and password exists
     return result[0] == 1
@@ -156,9 +165,11 @@ def center_window(root, width, height):
 
 
 class EmployeeClassAssignment:
-    def __init__(self):
+    def __init__(self, db_connection):
         self.window = tk.Toplevel()
         self.window.title("Assign Employee to Class")
+
+        self.conn = db_connection
 
         # Create and pack entry fields for assignment attributes
         self.employee_id_label = tk.Label(self.window, text="Employee ID")
@@ -176,8 +187,7 @@ class EmployeeClassAssignment:
         self.assign_button.pack()
 
     def assign_employee_to_class(self):
-        conn = sqlite3.connect("school_database.db")
-        cursor = conn.cursor()
+        cursor = self.conn.cursor()
 
         employee_id = self.employee_id_entry.get()
         class_id = self.class_id_entry.get()
@@ -188,14 +198,15 @@ class EmployeeClassAssignment:
 
         if employee:
             # If the employee is a teacher, assign them to the class
-            cursor.execute("INSERT INTO employee_class (employee_id, class_id) VALUES (?, ?)",
-                           (employee_id, class_id))
-            conn.commit()
-            conn.close()
-            self.window.destroy()
-            messagebox.showinfo("Successful", "Employee-Class Assignment Successful!")
+            try:
+                cursor.execute("INSERT INTO employee_class (employee_id, class_id) VALUES (?, ?)",
+                               (employee_id, class_id))
+                self.conn.commit()
+                self.window.destroy()
+                messagebox.showinfo("Successful", "Employee-Class Assignment Successful!")
+            except sqlite3.Error as error:
+                messagebox.showerror("Error", str(error))
         else:
-            conn.close()
             messagebox.showerror("Error", "Employee not found or not a teacher.")
 
 
@@ -233,19 +244,20 @@ def show_employee_class_records():
     tree.pack(fill=tk.BOTH, expand=True)
 
 
-def delete_all_employee_class_records():
+def delete_all_employee_class_records(conn):
     confirmation = messagebox.askquestion("Delete All Records",
                                           "Are you sure you want to delete all Employee-Class Assignment records?")
     if confirmation == 'yes':
-        conn = sqlite3.connect("school_database.db")
-        cursor = conn.cursor()
-        cursor.execute("DELETE FROM employee_class")
-        conn.commit()
-        conn.close()
-        messagebox.showinfo("Deletion Successful", "All Employee-Class Assignment records have been deleted.")
+        try:
+            cursor = conn.cursor()
+            cursor.execute("DELETE FROM employee_class")
+            conn.commit()
+            messagebox.showinfo("Deletion Successful", "All Employee-Class Assignment records have been deleted.")
+        except sqlite3.Error as error:
+            messagebox.showerror("Error", str(error))
 
 
-def delete_employee_class_record():
+def delete_employee_class_record(conn):
     # Create a Tkinter window
     employee_class_window = tk.Tk()
     employee_class_window.withdraw()  # Hide the main window
@@ -260,17 +272,18 @@ def delete_employee_class_record():
                                               f"{employee_id} Class ID-{class_id} assignment from the"
                                               f" Employee-Class assignments?")
         if confirmation == 'yes':
-            conn = sqlite3.connect("school_database.db")
-            cursor = conn.cursor()
+            try:
+                cursor = conn.cursor()
 
-            # Delete the employee_class assignment record for the specified employee_id and class_id
-            cursor.execute("DELETE FROM employee_class WHERE employee_id = ? AND class_id = ?",
-                           (employee_id, class_id))
+                # Delete the employee_class assignment record for the specified employee_id and class_id
+                cursor.execute("DELETE FROM employee_class WHERE employee_id = ? AND class_id = ?",
+                               (employee_id, class_id))
 
-            conn.commit()
-            conn.close()
-            messagebox.showinfo("Deletion Successful", f"Employee-Class assignment for Employee ID"
-                                                       f" {employee_id} and Class ID {class_id} has been deleted.")
+                conn.commit()
+                messagebox.showinfo("Deletion Successful", f"Employee-Class assignment for Employee ID"
+                                                           f" {employee_id} and Class ID {class_id} has been deleted.")
+            except sqlite3.Error as error:
+                messagebox.showerror("Error", str(error))
         else:
             messagebox.showinfo("Deletion Canceled", "Employee-Class assignment has not been deleted.")
     else:
