@@ -32,7 +32,7 @@ def create_course_table():
                     course_name TEXT,
                     course_description TEXT,
                     employee_id INTEGER,
-                    FOREIGN KEY (employee_id) REFERENCES employees (employee_id)
+                    FOREIGN KEY (employee_id) REFERENCES employees (employee_id) ON DELETE CASCADE
                     )''')
 
 
@@ -44,7 +44,7 @@ def create_class_table():
                     class_id INTEGER PRIMARY KEY,
                     class_name TEXT,
                     course_id INTEGER,
-                    FOREIGN KEY (course_id) REFERENCES course (course_id)
+                    FOREIGN KEY (course_id) REFERENCES course (course_id) ON DELETE CASCADE
                     )''')
     conn.commit()
     conn.close()
@@ -57,8 +57,8 @@ def create_class_courses_table():
                     class_id INTEGER,
                     course_id INTEGER,
                     PRIMARY KEY (class_id, course_id),
-                    FOREIGN KEY (class_id) REFERENCES class (class_id),
-                    FOREIGN KEY (course_id) REFERENCES course (course_id))''')
+                    FOREIGN KEY (class_id) REFERENCES class (class_id) ON DELETE CASCADE,
+                    FOREIGN KEY (course_id) REFERENCES course (course_id) ON DELETE CASCADE)''')
     conn.commit()
     conn.close()
 
