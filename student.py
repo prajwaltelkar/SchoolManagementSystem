@@ -520,8 +520,9 @@ def generate_pdf_report(student_name, student_id, attendance_percentage, grade_r
         # Define header and footer content
         def header(canvas, doc):
             canvas.setFont('Helvetica', 12)
-            canvas.drawString(doc.width - 250, doc.height + 80, "Prajwal International School")
-            canvas.drawString(doc.width - 200, doc.height + 50, "CBSE Bangalore")
+            canvas.drawString(doc.width - 250, doc.height + 80, "Prajwal S Telkar International School")
+            canvas.drawString(doc.width - 200, doc.height + 50, "ICSE Bengaluru")
+            canvas.drawString(doc.width - 200, doc.height + 20, "Student Report")
             # Add any other header elements as needed
 
         def footer(canvas, doc):
@@ -553,6 +554,10 @@ def generate_pdf_report(student_name, student_id, attendance_percentage, grade_r
         elements.append(Spacer(1, 12))
 
         # Add the grade report table
+        grade_report_text = f"Marks Report:"
+        grade_report_paragraph = Paragraph(grade_report_text, normal_style)
+        elements.append(grade_report_paragraph)
+        elements.append(Spacer(1, 12))
         grade_data = [["Course", "Marks", "Grade"]]
         for course, marks, grade in grade_report:
             grade_data.append([course, str(marks), grade])
@@ -563,7 +568,7 @@ def generate_pdf_report(student_name, student_id, attendance_percentage, grade_r
         elements.append(Spacer(1, 12))
 
         # Add total marks and total percentage
-        total_marks_text = f"Total Marks: {total_marks}"
+        total_marks_text = f"Total Marks: {total_marks} out of {len(grade_report) * 100}"
         total_percentage_text = f"Total Percentage: {total_percentage:.1f}%"
         total_marks_paragraph = Paragraph(total_marks_text, normal_style)
         total_percentage_paragraph = Paragraph(total_percentage_text, normal_style)
