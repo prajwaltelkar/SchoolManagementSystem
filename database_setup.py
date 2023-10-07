@@ -2,8 +2,7 @@ import sqlite3
 
 
 # Create a table to store employee information
-def create_employee_table():
-    conn = sqlite3.connect("school_database.db")
+def create_employee_table(conn):
     cursor = conn.cursor()
     cursor.execute('''CREATE TABLE IF NOT EXISTS employees (
                     employee_id INTEGER PRIMARY KEY,
@@ -23,8 +22,7 @@ def create_employee_table():
 
 
 # Create a table to store class information
-def create_course_table():
-    conn = sqlite3.connect("school_database.db")
+def create_course_table(conn):
     cursor = conn.cursor()
     cursor.execute('''CREATE TABLE IF NOT EXISTS course (
                     course_id INTEGER PRIMARY KEY,
@@ -36,8 +34,7 @@ def create_course_table():
 
 
 # Create a table to store class information
-def create_class_table():
-    conn = sqlite3.connect("school_database.db")
+def create_class_table(conn):
     cursor = conn.cursor()
     cursor.execute('''CREATE TABLE IF NOT EXISTS class (
                     class_id INTEGER PRIMARY KEY,
@@ -48,8 +45,7 @@ def create_class_table():
     conn.commit()
 
 
-def create_class_courses_table():
-    conn = sqlite3.connect("school_database.db")
+def create_class_courses_table(conn):
     cursor = conn.cursor()
     cursor.execute('''CREATE TABLE IF NOT EXISTS class_courses (
                     class_id INTEGER,
@@ -60,8 +56,7 @@ def create_class_courses_table():
     conn.commit()
 
 
-def create_employee_class_table():
-    conn = sqlite3.connect("school_database.db")
+def create_employee_class_table(conn):
     cursor = conn.cursor()
     cursor.execute('''CREATE TABLE IF NOT EXISTS employee_class (
                     employee_id INTEGER,
@@ -73,8 +68,7 @@ def create_employee_class_table():
     conn.commit()
 
 
-def create_student_table():
-    conn = sqlite3.connect("school_database.db")
+def create_student_table(conn):
     cursor = conn.cursor()
 
     cursor.execute('''CREATE TABLE IF NOT EXISTS students (
@@ -97,8 +91,7 @@ def create_student_table():
     conn.commit()
 
 
-def create_fee_table():
-    conn = sqlite3.connect("school_database.db")
+def create_fee_table(conn):
     cursor = conn.cursor()
     cursor.execute('''CREATE TABLE IF NOT EXISTS fee_payments (
                         payment_id INTEGER PRIMARY KEY,
@@ -112,8 +105,7 @@ def create_fee_table():
     conn.commit()
 
 
-def create_student_notice_table():
-    conn = sqlite3.connect("school_database.db")
+def create_student_notice_table(conn):
     cursor = conn.cursor()
     cursor.execute('''CREATE TABLE IF NOT EXISTS student_notice (
                         stud_notice_id INTEGER PRIMARY KEY,
@@ -126,8 +118,7 @@ def create_student_notice_table():
     conn.commit()
 
 
-def create_employee_notice_table():
-    conn = sqlite3.connect("school_database.db")
+def create_employee_notice_table(conn):
     cursor = conn.cursor()
     cursor.execute('''CREATE TABLE IF NOT EXISTS employee_notice (
                         emp_notice_id INTEGER PRIMARY KEY,
@@ -140,8 +131,7 @@ def create_employee_notice_table():
     conn.commit()
 
 
-def create_attendance_table():
-    conn = sqlite3.connect("school_database.db")
+def create_attendance_table(conn):
     cursor = conn.cursor()
     cursor.execute('''CREATE TABLE IF NOT EXISTS attendance (
                             student_id INTEGER,
@@ -153,8 +143,7 @@ def create_attendance_table():
     conn.commit()
 
 
-def create_grade_table():
-    conn = sqlite3.connect("school_database.db")
+def create_grade_table(conn):
     cursor = conn.cursor()
     cursor.execute('''CREATE TABLE IF NOT EXISTS grades (
                         student_id INTEGER,

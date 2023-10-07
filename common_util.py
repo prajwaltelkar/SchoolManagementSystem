@@ -32,14 +32,16 @@ class ClassCourses:
         class_id = self.class_id_entry.get()
         course_id = self.course_id_entry.get()
 
-        cursor.execute("INSERT INTO class_courses (class_id, course_id) VALUES (?, ?)",
-                       (class_id, course_id))
-
-        conn.commit()
-        conn.close()
+        try:
+            cursor.execute("INSERT INTO class_courses (class_id, course_id) VALUES (?, ?)",
+                           (class_id, course_id))
+            conn.commit()
+            conn.close()
+            messagebox.showinfo("Successful", "Course-Class Assigned!")
+        except sqlite3.Error as error:
+            messagebox.showerror("Error", str(error))
 
         self.window.destroy()
-        messagebox.showinfo("Successful", "Course-Class Assigned!")
 
 
 def show_class_courses_records():

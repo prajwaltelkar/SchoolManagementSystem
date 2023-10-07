@@ -1,3 +1,4 @@
+import sqlite3
 import tkinter as tk
 from tkinter import ttk
 from tkinter import messagebox
@@ -26,7 +27,8 @@ from grades import StudentGradesViewer, GradeAssignmentApp, show_grades_records,
 
 
 class LoginPage:
-    def __init__(self, root):
+    def __init__(self, root, db_connnection):
+        self.conn = db_connnection
         self.root = root
         self.root.title("Login")
         center_window(root, 1800, 700)
@@ -130,17 +132,17 @@ class LoginPage:
                 messagebox.showerror("Login Failed", "Invalid credentials")
 
     def open_admin_page(self):
-        create_class_table()
-        create_student_table()
-        create_course_table()
-        create_employee_table()
-        create_student_notice_table()
-        create_employee_notice_table()
-        create_fee_table()
-        create_class_courses_table()
-        create_attendance_table()
-        create_grade_table()
-        create_employee_class_table()
+        create_class_table(self.conn)
+        create_student_table(self.conn)
+        create_course_table(self.conn)
+        create_employee_table(self.conn)
+        create_student_notice_table(self.conn)
+        create_employee_notice_table(self.conn)
+        create_fee_table(self.conn)
+        create_class_courses_table(self.conn)
+        create_attendance_table(self.conn)
+        create_grade_table(self.conn)
+        create_employee_class_table(self.conn)
 
         # Create a new window for the admin interface
         self.admin_window = tk.Toplevel()
@@ -299,8 +301,8 @@ class LoginPage:
 
     def open_teacher_page(self):
         # Create a staff GUI window or navigate to the staff actions
-        create_attendance_table()
-        create_grade_table()
+        create_attendance_table(self.conn)
+        create_grade_table(self.conn)
 
         # Create a new window for the admin interface
         self.employee_window = tk.Toplevel()
@@ -514,8 +516,10 @@ class LoginPage:
 def main():
     root = tk.Tk()
     root.configure(bg="#87CEEB")
-    LoginPage(root)
+    conn = sqlite3.connect("school_database.db")
+    LoginPage(root, conn)
     root.mainloop()
+    conn.close()
 
 
 if __name__ == "__main__":
