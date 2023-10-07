@@ -96,38 +96,50 @@ def delete_class_course_record(conn):
                                               f"{class_id} Course ID-{course_id} association from the"
                                               f" Class-Course associations?")
         if confirmation == 'yes':
-            try:
-                cursor = conn.cursor()
+            cursor = conn.cursor()
 
-                # Delete the class_course record for the specified class_id and course_id
+            # Delete the class_course record for the specified class_id and course_id
+            try:
                 cursor.execute("DELETE FROM class_courses WHERE class_id = ? AND course_id = ?",
                                (class_id, course_id))
-
                 conn.commit()
-                messagebox.showinfo("Deletion Successful", f"Class-Course association for Class ID"
-                                                           f" {class_id} and Course ID {course_id} has been deleted.")
+                if cursor.rowcount > 0:
+                    messagebox.showinfo("Deletion Successful", f"Class-Course association for Class ID"
+                                                               f" {class_id} and Course ID {course_id} has been deleted.")
+                else:
+                    messagebox.showerror("Invalid Input", "No such Class-Course record.")
             except sqlite3.Error as error:
+                conn.rollback()  # Rollback the transaction in case of an error
                 messagebox.showerror("Error", str(error))
         else:
-            messagebox.showinfo("Deletion Canceled", "Class-Course association has not been deleted.")
+            messagebox.showerror("Deletion Canceled", "Class-Course association has not been deleted.")
     else:
-        messagebox.showinfo("Invalid Input", "Please provide valid Class ID and Course ID.")
+        messagebox.showerror("Invalid Input", "Please provide valid Class ID and Course ID.")
 
     # Close the Tkinter window
     class_course_window.destroy()
 
 
 def delete_all_class_courses_records(conn):
-    confirmation = messagebox.askquestion("Delete All Records",
-                                          "Are you sure you want to delete all Class records?")
-    if confirmation == 'yes':
-        try:
-            cursor = conn.cursor()
-            cursor.execute("DELETE FROM class_courses")
-            conn.commit()
-            messagebox.showinfo("Deletion Successful", "All Class records have been deleted.")
-        except sqlite3.Error as error:
-            messagebox.showerror("Error", str(error))
+    cursor = conn.cursor()
+    cursor.execute("SELECT COUNT(*) FROM class_courses")
+    count = cursor.fetchone()[0]
+
+    if count == 0:
+        messagebox.showerror("No Records", "There are no Class-Course records to delete.")
+    else:
+        confirmation = messagebox.askquestion("Delete All Records",
+                                              "Are you sure you want to delete all Class records?")
+        if confirmation == 'yes':
+            try:
+                cursor.execute("DELETE FROM class_courses")
+                conn.commit()
+                messagebox.showinfo("Deletion Successful", "All Class records have been deleted.")
+            except sqlite3.Error as error:
+                conn.rollback()
+                messagebox.showerror("Error", str(error))
+        else:
+            messagebox.showerror("Deletion Canceled", "No Class-Course records have been deleted.")
 
 
 # Login authentication
@@ -142,13 +154,13 @@ def authenticate_student(student_id, student_password):
             {"student_id": student_id, "password": student_password})
 
         result = cursor.fetchone()
-
         conn.close()
+
+        # If the query result is 1, it means the student with the provided ID and password exists
+        return result[0] == 1
+
     except sqlite3.Error as error:
         messagebox.showerror("Error", str(error))
-
-    # If the query result is 1, it means the student with the provided ID and password exists
-    return result[0] == 1
 
 
 def center_window(root, width, height):
@@ -245,16 +257,25 @@ def show_employee_class_records():
 
 
 def delete_all_employee_class_records(conn):
-    confirmation = messagebox.askquestion("Delete All Records",
-                                          "Are you sure you want to delete all Employee-Class Assignment records?")
-    if confirmation == 'yes':
-        try:
-            cursor = conn.cursor()
-            cursor.execute("DELETE FROM employee_class")
-            conn.commit()
-            messagebox.showinfo("Deletion Successful", "All Employee-Class Assignment records have been deleted.")
-        except sqlite3.Error as error:
-            messagebox.showerror("Error", str(error))
+    cursor = conn.cursor()
+    cursor.execute("SELECT COUNT(*) FROM employee_class")
+    count = cursor.fetchone()[0]
+
+    if count == 0:
+        messagebox.showerror("No Records", "There are no Employee-Class record to delete.")
+    else:
+        confirmation = messagebox.askquestion("Delete All Records",
+                                              "Are you sure you want to delete all Employee-Class Assignment records?")
+        if confirmation == 'yes':
+            try:
+                cursor.execute("DELETE FROM employee_class")
+                conn.commit()
+                messagebox.showinfo("Deletion Successful", "All Employee-Class Assignment records have been deleted.")
+            except sqlite3.Error as error:
+                conn.rollback()
+                messagebox.showerror("Error", str(error))
+        else:
+            messagebox.showerror("Deletion Canceled", "No Employee-Class records have been deleted.")
 
 
 def delete_employee_class_record(conn):
@@ -272,22 +293,25 @@ def delete_employee_class_record(conn):
                                               f"{employee_id} Class ID-{class_id} assignment from the"
                                               f" Employee-Class assignments?")
         if confirmation == 'yes':
-            try:
-                cursor = conn.cursor()
+            cursor = conn.cursor()
 
-                # Delete the employee_class assignment record for the specified employee_id and class_id
+            # Delete the employee_class assignment record for the specified employee_id and class_id
+            try:
                 cursor.execute("DELETE FROM employee_class WHERE employee_id = ? AND class_id = ?",
                                (employee_id, class_id))
-
                 conn.commit()
-                messagebox.showinfo("Deletion Successful", f"Employee-Class assignment for Employee ID"
-                                                           f" {employee_id} and Class ID {class_id} has been deleted.")
+                if cursor.rowcount > 0:
+                    messagebox.showinfo("Deletion Successful", f"Employee-Class assignment for Employee ID"
+                                                               f" {employee_id} and Class ID {class_id} has been deleted.")
+                else:
+                    messagebox.showerror("Invalid Input", "No such Employee-Class record.")
             except sqlite3.Error as error:
+                conn.rollback()  # Rollback the transaction in case of an error
                 messagebox.showerror("Error", str(error))
         else:
-            messagebox.showinfo("Deletion Canceled", "Employee-Class assignment has not been deleted.")
+            messagebox.showerror("Deletion Canceled", "Employee-Class assignment has not been deleted.")
     else:
-        messagebox.showinfo("Invalid Input", "Please provide valid Employee ID and Class ID.")
+        messagebox.showerror("Invalid Input", "Please provide valid Employee ID and Class ID.")
 
     # Close the Tkinter window
     employee_class_window.destroy()
