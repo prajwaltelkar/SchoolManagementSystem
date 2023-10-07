@@ -1,9 +1,10 @@
 import sqlite3
 
+conn = sqlite3.connect("school_database.db")
+
 
 # Create a table to store employee information
 def create_employee_table():
-    conn = sqlite3.connect("school_database.db")
     cursor = conn.cursor()
     cursor.execute('''CREATE TABLE IF NOT EXISTS employees (
                     employee_id INTEGER PRIMARY KEY,
@@ -20,7 +21,6 @@ def create_employee_table():
                     password TEXT
                     )''')
     conn.commit()
-    conn.close()
 
 
 # Create a table to store class information
@@ -32,7 +32,7 @@ def create_course_table():
                     course_name TEXT,
                     course_description TEXT,
                     employee_id INTEGER,
-                    FOREIGN KEY (employee_id) REFERENCES employees (employee_id) ON DELETE CASCADE
+                    FOREIGN KEY (employee_id) REFERENCES employees (employee_id)
                     )''')
 
 
@@ -44,10 +44,9 @@ def create_class_table():
                     class_id INTEGER PRIMARY KEY,
                     class_name TEXT,
                     course_id INTEGER,
-                    FOREIGN KEY (course_id) REFERENCES course (course_id) ON DELETE CASCADE
+                    FOREIGN KEY (course_id) REFERENCES course (course_id)
                     )''')
     conn.commit()
-    conn.close()
 
 
 def create_class_courses_table():
@@ -57,10 +56,9 @@ def create_class_courses_table():
                     class_id INTEGER,
                     course_id INTEGER,
                     PRIMARY KEY (class_id, course_id),
-                    FOREIGN KEY (class_id) REFERENCES class (class_id) ON DELETE CASCADE,
-                    FOREIGN KEY (course_id) REFERENCES course (course_id) ON DELETE CASCADE)''')
+                    FOREIGN KEY (class_id) REFERENCES class (class_id),
+                    FOREIGN KEY (course_id) REFERENCES course (course_id))''')
     conn.commit()
-    conn.close()
 
 
 def create_employee_class_table():
@@ -74,7 +72,6 @@ def create_employee_class_table():
                     FOREIGN KEY (class_id) REFERENCES class (class_id)
                     )''')
     conn.commit()
-    conn.close()
 
 
 def create_student_table():
@@ -99,7 +96,6 @@ def create_student_table():
                     )''')
 
     conn.commit()
-    conn.close()
 
 
 def create_fee_table():
@@ -114,6 +110,7 @@ def create_fee_table():
                         academic_year TEXT,
                         FOREIGN KEY (student_id) REFERENCES students (student_id)
                     )''')
+    conn.commit()
 
 
 def create_student_notice_table():
@@ -127,6 +124,7 @@ def create_student_notice_table():
                         publish_date DATE,
                         FOREIGN KEY (student_id) REFERENCES students (student_id)
                     )''')
+    conn.commit()
 
 
 def create_employee_notice_table():
@@ -140,6 +138,7 @@ def create_employee_notice_table():
                         publish_date DATE,
                         FOREIGN KEY (employee_id) REFERENCES employees (employee_id)
                     )''')
+    conn.commit()
 
 
 def create_attendance_table():
@@ -152,6 +151,7 @@ def create_attendance_table():
                             PRIMARY KEY (student_id, date),
                             FOREIGN KEY (student_id) REFERENCES students (student_id)
                         )''')
+    conn.commit()
 
 
 def create_grade_table():
@@ -167,4 +167,11 @@ def create_grade_table():
                         FOREIGN KEY (course_id) REFERENCES course (course_id)
                     )''')
     conn.commit()
-    conn.close()
+
+
+
+
+
+
+
+
