@@ -12,7 +12,11 @@ def create_employee_table():
                     dob DATE,
                     address TEXT,
                     contact_number TEXT,
+                    date_of_join DATE,
                     role TEXT,
+                    designation TEXT,
+                    email TEXT,
+                    salary INTEGER,
                     password TEXT
                     )''')
     conn.commit()
@@ -59,6 +63,20 @@ def create_class_courses_table():
     conn.close()
 
 
+def create_employee_class_table():
+    conn = sqlite3.connect("school_database.db")
+    cursor = conn.cursor()
+    cursor.execute('''CREATE TABLE IF NOT EXISTS employee_class (
+                    employee_id INTEGER,
+                    class_id INTEGER,
+                    PRIMARY KEY (employee_id, class_id),
+                    FOREIGN KEY (employee_id) REFERENCES employees (employee_id),
+                    FOREIGN KEY (class_id) REFERENCES class (class_id)
+                    )''')
+    conn.commit()
+    conn.close()
+
+
 def create_student_table():
     conn = sqlite3.connect("school_database.db")
     cursor = conn.cursor()
@@ -74,6 +92,7 @@ def create_student_table():
                     mother_name TEXT,
                     enrollment_date DATE,
                     gender TEXT,
+                    email TEXT,
                     password TEXT,
                     class_id INTEGER,
                     FOREIGN KEY (class_id) REFERENCES class(class_id)
@@ -130,6 +149,7 @@ def create_attendance_table():
                             student_id INTEGER,
                             date DATE,
                             status TEXT,
+                            PRIMARY KEY (student_id, date),
                             FOREIGN KEY (student_id) REFERENCES students (student_id)
                         )''')
 
@@ -142,22 +162,9 @@ def create_grade_table():
                         course_id INTEGER,
                         marks INTEGER,
                         grade TEXT,
+                        PRIMARY KEY (student_id, course_id),
                         FOREIGN KEY (student_id) REFERENCES students (student_id),
                         FOREIGN KEY (course_id) REFERENCES course (course_id)
-                    )''')
-    conn.commit()
-    conn.close()
-
-
-def create_employee_class_table():
-    conn = sqlite3.connect("school_database.db")
-    cursor = conn.cursor()
-    cursor.execute('''CREATE TABLE IF NOT EXISTS employee_class (
-                    employee_id INTEGER,
-                    class_id INTEGER,
-                    PRIMARY KEY (employee_id, class_id),
-                    FOREIGN KEY (employee_id) REFERENCES employees (employee_id),
-                    FOREIGN KEY (class_id) REFERENCES class (class_id)
                     )''')
     conn.commit()
     conn.close()

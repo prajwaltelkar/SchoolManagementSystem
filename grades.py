@@ -170,10 +170,10 @@ def show_grades_records():
     records_window.title("Grades Database")
 
     # Create a treeview widget to display records
-    tree = ttk.Treeview(records_window, columns=("Student ID", "Employee ID", "Marks", "Grade"))
+    tree = ttk.Treeview(records_window, columns=("Student ID", "Course ID", "Marks", "Grade"))
     tree.heading("#0", text="Grade Records")
     tree.heading("#1", text="Student ID")
-    tree.heading("#2", text="Employee ID")
+    tree.heading("#2", text="Course ID")
     tree.heading("#3", text="Marks")
     tree.heading("#4", text="Grade")
 

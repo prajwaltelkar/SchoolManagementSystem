@@ -69,6 +69,11 @@ class Student:
         self.gender_entry = tk.Entry(self.student_window)
         self.gender_entry.pack()
 
+        self.email_label = tk.Label(self.student_window, text="Email:")
+        self.email_label.pack()
+        self.email_entry = tk.Entry(self.student_window)
+        self.email_entry.pack()
+
         self.password_label = tk.Label(self.student_window, text="Password:")
         self.password_label.pack()
         self.password_entry = tk.Entry(self.student_window)
@@ -95,6 +100,7 @@ class Student:
         mother_name = self.mother_name_entry.get()
         enrollment_date = self.enrollment_date_entry.get()
         gender = self.gender_entry.get()
+        email = self.email_entry.get()
         password = self.password_entry.get()
         class_id = self.class_id_entry.get()
 
@@ -104,10 +110,10 @@ class Student:
 
         cursor.execute('''INSERT INTO students (
                             student_id, first_name, last_name, dob, address, contact_number, 
-                            father_name, mother_name, enrollment_date, gender, password, class_id
-                        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)''',
+                            father_name, mother_name, enrollment_date, gender, email, password, class_id
+                        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)''',
                        (student_id, first_name, last_name, dob, address, contact_number,
-                        father_name, mother_name, enrollment_date, gender, password, class_id))
+                        father_name, mother_name, enrollment_date, gender, email, password, class_id))
 
         conn.commit()
         conn.close()
@@ -126,7 +132,7 @@ def show_student_records():
     tree = ttk.Treeview(records_window, columns=("Student ID", "First Name", "Last Name", "DOB", "Address",
                                                  "Contact Number", "Father Name", "Mother Name",
                                                  "Enrollment Date",
-                                                 "Gender", "Password", "Class ID"))
+                                                 "Gender", "Email", "Password", "Class ID"))
     tree.heading("#0", text="Student Records")
     tree.heading("#1", text="Student ID")
     tree.heading("#2", text="First Name")
@@ -138,8 +144,9 @@ def show_student_records():
     tree.heading("#8", text="Mother Name")
     tree.heading("#9", text="Enrollment Date")
     tree.heading("#10", text="Gender")
-    tree.heading("#11", text="Password")
-    tree.heading("#12", text="Class ID")
+    tree.heading("#11", text="Email")
+    tree.heading("#12", text="Password")
+    tree.heading("#13", text="Class ID")
 
     # Create horizontal scrollbar
     xscroll = ttk.Scrollbar(records_window, orient=tk.HORIZONTAL, command=tree.xview)
@@ -173,7 +180,8 @@ def delete_student():
 
     if student_id is not None:
         confirmation = messagebox.askquestion("Delete Student",
-                                              f"Are you sure you want to delete Student ID {student_id} from the Student records?")
+                                              f"Are you sure you want to delete Student ID {student_id} "
+                                              f"from the Student records?")
         if confirmation == 'yes':
             conn = sqlite3.connect("school_database.db")
             cursor = conn.cursor()
@@ -477,7 +485,7 @@ def fetch_student_grade_report(student_id):
     return grade_report, total_marks, total_percentage
 
 
-def generate_pdf_report(student_name, attendance_percentage, grade_report, total_marks, total_percentage):
+def generate_pdf_report(student_name, student_id, attendance_percentage, grade_report, total_marks, total_percentage):
     try:
         # Create the PDF filename using the provided student_name
         pdf_filename = fr"C:\Users\Prajwal\Downloads\{student_name}_report.pdf".replace(" ", "_")
@@ -530,6 +538,12 @@ def generate_pdf_report(student_name, attendance_percentage, grade_report, total
         stud_name_text = f"Student Name: {student_name}"
         stud_name_paragraph = Paragraph(stud_name_text, normal_style)
         elements.append(stud_name_paragraph)
+        elements.append(Spacer(1, 12))
+
+        # Add the student id
+        stud_id_text = f"Student ID: {student_id}"
+        stud_id_paragraph = Paragraph(stud_id_text, normal_style)
+        elements.append(stud_id_paragraph)
         elements.append(Spacer(1, 12))
 
         # Add the attendance percentage
@@ -588,4 +602,4 @@ def view_report(student_id):
 
         # Close the database connection
         conn.close()
-        generate_pdf_report(student_name, attendance_percentage, grade_report, total_marks, total_percentage)
+        generate_pdf_report(student_name, student_id, attendance_percentage, grade_report, total_marks, total_percentage)

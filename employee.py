@@ -14,7 +14,7 @@ class Employee:
         self.employee_window.title("Register Employee")
 
         # Create and pack entry fields for employee attributes
-        employee_id_label = tk.Label(self.employee_window, text="Employee ID (Primary Key):")
+        employee_id_label = tk.Label(self.employee_window, text="Employee ID:")
         employee_id_label.pack()
         self.employee_id_entry = tk.Entry(self.employee_window)
         self.employee_id_entry.pack()
@@ -44,10 +44,30 @@ class Employee:
         self.contact_number_entry = tk.Entry(self.employee_window)
         self.contact_number_entry.pack()
 
+        doj_label = tk.Label(self.employee_window, text="Date of Joining:")
+        doj_label.pack()
+        self.doj_entry = tk.Entry(self.employee_window)
+        self.doj_entry.pack()
+
         role_label = tk.Label(self.employee_window, text="Role (Teacher/Staff):")
         role_label.pack()
         self.role_entry = tk.Entry(self.employee_window)
         self.role_entry.pack()
+
+        designation_label = tk.Label(self.employee_window, text="Designation:")
+        designation_label.pack()
+        self.designation_entry = tk.Entry(self.employee_window)
+        self.designation_entry.pack()
+
+        email_label = tk.Label(self.employee_window, text="Email:")
+        email_label.pack()
+        self.email_entry = tk.Entry(self.employee_window)
+        self.email_entry.pack()
+
+        salary_label = tk.Label(self.employee_window, text="Salary:")
+        salary_label.pack()
+        self.salary_entry = tk.Entry(self.employee_window)
+        self.salary_entry.pack()
 
         password_label = tk.Label(self.employee_window, text="Password:")
         password_label.pack()
@@ -65,17 +85,22 @@ class Employee:
         dob = self.dob_entry.get()
         address = self.address_entry.get()
         contact_number = self.contact_number_entry.get()
+        doj = self.doj_entry.get()
         role = self.role_entry.get()
+        designation = self.designation_entry.get()
+        email = self.email_entry.get()
+        salary = self.salary_entry.get()
         password = self.password_entry.get()
 
         conn = sqlite3.connect("school_database.db")
         cursor = conn.cursor()
 
         cursor.execute('''INSERT INTO employees (
-                            employee_id, first_name, last_name, dob, address, contact_number, role, password
-                        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)''',
+                            employee_id, first_name, last_name, dob, address, contact_number, date_of_join, role, 
+                            designation, email, salary, password
+                        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)''',
                        (employee_id, first_name, last_name, dob, address,
-                        contact_number, role, password))
+                        contact_number, doj, role, designation, email, salary, password))
 
         self.employee_window.destroy()
         messagebox.showinfo("Successful", "Employee Created!")
@@ -91,7 +116,7 @@ def show_employee_records():
 
     # Create a treeview widget to display records
     tree = ttk.Treeview(records_window, columns=("Employee ID", "First Name", "Last Name", "DOB", "Address",
-                                                 "Contact Number", "Role", "Password"))
+                                                 "Contact Number", "Date Of Joining", "Role", "Designation", "Email", "Salary", "Password"))
     tree.heading("#0", text="Employee Records")
     tree.heading("#1", text="Employee ID")
     tree.heading("#2", text="First Name")
@@ -99,8 +124,12 @@ def show_employee_records():
     tree.heading("#4", text="Date of Birth")
     tree.heading("#5", text="Address")
     tree.heading("#6", text="Contact Number")
-    tree.heading("#7", text="Role")
-    tree.heading("#8", text="Password")
+    tree.heading("#7", text="Date of Joining")
+    tree.heading("#8", text="Role")
+    tree.heading("#9", text="Designation")
+    tree.heading("#10", text="Email")
+    tree.heading("#11", text="Salary")
+    tree.heading("#12", text="Password")
 
     # Create horizontal scrollbar
     xscroll = ttk.Scrollbar(records_window, orient=tk.HORIZONTAL, command=tree.xview)

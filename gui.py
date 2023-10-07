@@ -184,7 +184,7 @@ class LoginPage:
             ("Register Employee", Employee),
             ("Show Employee Records", show_employee_records),
             ("Delete Employee", delete_employee),
-            ("Delete Employee Records", delete_all_employee_records)
+            ("Delete All Employee Records", delete_all_employee_records)
         ]
 
         course_buttons = [
@@ -212,7 +212,7 @@ class LoginPage:
             ("Register Student", Student),
             ("Show Student Records", show_student_records),
             ("Delete Student", delete_student),
-            ("Delete Student Records", delete_all_student_records)
+            ("Delete All Student Records", delete_all_student_records)
         ]
 
         fee_buttons = [
