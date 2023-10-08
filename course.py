@@ -85,18 +85,19 @@ def show_course_records():
         cursor.execute("SELECT * FROM course")
         employee_records = cursor.fetchall()
         conn.close()
+
+        # Insert Employee records into the treeview
+        for record in employee_records:
+            tree.insert("", "end", values=record)
+
+        # Adjust column widths based on content
+        for col in tree["columns"]:
+            tree.column(col, width=tkfont.Font().measure(col) + 10)  # Adjust the width as needed
+
+        tree.pack(fill=tk.BOTH, expand=True)
+
     except sqlite3.Error as error:
         messagebox.showerror("Error", str(error))
-
-    # Insert Employee records into the treeview
-    for record in employee_records:
-        tree.insert("", "end", values=record)
-
-    # Adjust column widths based on content
-    for col in tree["columns"]:
-        tree.column(col, width=tkfont.Font().measure(col) + 10)  # Adjust the width as needed
-
-    tree.pack(fill=tk.BOTH, expand=True)
 
 
 def delete_course(conn):

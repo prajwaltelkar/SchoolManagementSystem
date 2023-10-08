@@ -220,24 +220,24 @@ class LoginPage:
         ]
 
         fee_buttons = [
-            ("Update Fee Payment\nStatus", Fee(self.conn)),
+            ("Update Fee Payment\nStatus", lambda: Fee(self.conn)),
             ("Show Fee Records", show_fee_records),
-            ("Delete Fee Record", delete_fee(self.conn)),
-            ("Delete All Fee\nRecords", delete_all_fee_records(self.conn))
+            ("Delete Fee Record", lambda: delete_fee(self.conn)),
+            ("Delete All Fee\nRecords", lambda: delete_all_fee_records(self.conn))
         ]
 
         student_notice_buttons = [
-            ("Send Notice to\nStudent", StudentNotice),
+            ("Send Notice to\nStudent", lambda: StudentNotice(self.conn)),
             ("Show Student Notice\nRecords", show_student_notice_records),
-            ("Delete Student Notice\nRecord", delete_student_notice_record),
-            ("Delete All Student\nNotice Records", delete_all_student_notice_records)
+            ("Delete Student Notice\nRecord", lambda: delete_student_notice_record(self.conn)),
+            ("Delete All Student\nNotice Records", lambda: delete_all_student_notice_records(self.conn))
         ]
 
         employee_notice_buttons = [
-            ("Send Notice to\nEmployee", EmployeeNotice),
+            ("Send Notice to\nEmployee", lambda: EmployeeNotice(self.conn)),
             ("Show Employee Notice\nRecords", show_employee_notice_records),
-            ("Delete Employee Notice\nRecord", delete_employee_notice_record),
-            ("Delete All Employee\nNotice Records", delete_all_employee_notice_records)
+            ("Delete Employee Notice\nRecord", lambda: delete_employee_notice_record(self.conn)),
+            ("Delete All Employee\nNotice Records", lambda: delete_all_employee_notice_records(self.conn))
         ]
 
         attendance_buttons = [

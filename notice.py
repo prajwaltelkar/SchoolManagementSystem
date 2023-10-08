@@ -6,9 +6,11 @@ import tkinter.font as tkfont
 
 
 class StudentNotice:
-    def __init__(self):
+    def __init__(self, db_connection):
         self.student_notice_window = tk.Toplevel()
         self.student_notice_window.title("Send Student Notice")
+
+        self.conn = db_connection
 
         self.student_id_label = tk.Label(self.student_notice_window, text="Student ID:")
         self.student_id_label.pack()
@@ -42,21 +44,21 @@ class StudentNotice:
         publish_date = self.publish_date_entry.get()
 
         # Insert student information into the database
-        conn = sqlite3.connect("school_database.db")
-        cursor = conn.cursor()
+        cursor = self.conn.cursor()
 
-        cursor.execute('''INSERT INTO student_notice (
-                                student_id, title, content, publish_date
-                            ) VALUES (?, ?, ?, ?)''',
-                       (student_id, title, content, publish_date))
+        try:
+            cursor.execute('''INSERT INTO student_notice (
+                                    student_id, title, content, publish_date
+                                ) VALUES (?, ?, ?, ?)''',
+                           (student_id, title, content, publish_date))
+            self.conn.commit()
 
-        conn.commit()
-        conn.close()
-
-        # Close the student registration window
-        self.student_notice_window.destroy()
-        messagebox.showinfo("Student Notice Status Updated", "Student Notice status"
-                                                             " has been updated for the student.")
+            # Close the student registration window
+            self.student_notice_window.destroy()
+            messagebox.showinfo("Student Notice Status Updated", "Student Notice status"
+                                                                 " has been updated for the student.")
+        except sqlite3.Error as error:
+            messagebox.showerror("Error", str(error))
 
 
 def show_student_notice_records():
@@ -80,24 +82,27 @@ def show_student_notice_records():
     tree.configure(xscrollcommand=xscroll.set)
 
     # Fetch student records from the database
-    conn = sqlite3.connect("school_database.db")
-    cursor = conn.cursor()
-    cursor.execute("SELECT * FROM student_notice")
-    student_records = cursor.fetchall()
-    conn.close()
+    try:
+        conn = sqlite3.connect("school_database.db")
+        cursor = conn.cursor()
+        cursor.execute("SELECT * FROM student_notice")
+        student_records = cursor.fetchall()
+        conn.close()
 
-    # Insert student records into the treeview
-    for record in student_records:
-        tree.insert("", "end", values=record)
+        # Insert student records into the treeview
+        for record in student_records:
+            tree.insert("", "end", values=record)
 
-    # Adjust column widths based on content
-    for col in tree["columns"]:
-        tree.column(col, width=tkfont.Font().measure(col) + 10)  # Adjust the width as needed
+        # Adjust column widths based on content
+        for col in tree["columns"]:
+            tree.column(col, width=tkfont.Font().measure(col) + 10)  # Adjust the width as needed
 
-    tree.pack(fill=tk.BOTH, expand=True)
+        tree.pack(fill=tk.BOTH, expand=True)
+    except sqlite3.Error as error:
+        messagebox.showerror("Error", str(error))
 
 
-def delete_student_notice_record():
+def delete_student_notice_record(conn):
     # Create a Tkinter window
     notice_window = tk.Tk()
     notice_window.withdraw()
@@ -109,15 +114,19 @@ def delete_student_notice_record():
         confirmation = messagebox.askquestion("Delete Student Notice",
                                               f"Are you sure you want to delete Student Notice ID {stud_notice_id} from the Student Notices?")
         if confirmation == 'yes':
-            conn = sqlite3.connect("school_database.db")
             cursor = conn.cursor()
 
             # Delete the student notice record for the specified stud_notice_id
-            cursor.execute("DELETE FROM student_notice WHERE stud_notice_id = ?", (stud_notice_id,))
-
-            conn.commit()
-            conn.close()
-            messagebox.showinfo("Deletion Successful", f"Student notice with ID {stud_notice_id} has been deleted.")
+            try:
+                cursor.execute("DELETE FROM student_notice WHERE stud_notice_id = ?", (stud_notice_id,))
+                conn.commit()
+                if cursor.rowcount > 0:
+                    messagebox.showinfo("Deletion Successful", f"Student notice with ID {stud_notice_id} has been deleted.")
+                else:
+                    messagebox.showerror("Invalid Input", "No such Student Notice record.")
+            except sqlite3.Error as error:
+                conn.rollback()  # Rollback the transaction in case of an error
+                messagebox.showerror("Error", str(error))
         else:
             messagebox.showinfo("Deletion Canceled", "Student notice has not been deleted.")
     else:
@@ -127,21 +136,34 @@ def delete_student_notice_record():
     notice_window.destroy()
 
 
-def delete_all_student_notice_records():
-    confirmation = messagebox.askquestion("Delete All Records",
-                                          "Are you sure you want to delete all student notice records?")
-    if confirmation == 'yes':
-        conn = sqlite3.connect("school_database.db")
-        cursor = conn.cursor()
-        cursor.execute("DELETE FROM student_notice")
-        conn.commit()
-        messagebox.showinfo("Deletion Successful", "All student notice records have been deleted.")
+def delete_all_student_notice_records(conn):
+    cursor = conn.cursor()
+    cursor.execute("SELECT COUNT(*) FROM student_notice")
+    count = cursor.fetchone()[0]
+
+    if count == 0:
+        messagebox.showerror("No Records", "There are no Student Notice records to delete.")
+    else:
+        confirmation = messagebox.askquestion("Delete All Records",
+                                              "Are you sure you want to delete all student notice records?")
+        if confirmation == 'yes':
+            try:
+                cursor.execute("DELETE FROM student_notice")
+                conn.commit()
+                messagebox.showinfo("Deletion Successful", "All student notice records have been deleted.")
+            except sqlite3.Error as error:
+                conn.rollback()
+                messagebox.showerror("Error", str(error))
+        else:
+            messagebox.showerror("Deletion Canceled", "No Course records have been deleted.")
 
 
 class EmployeeNotice:
-    def __init__(self):
+    def __init__(self, db_connection):
         self.employee_notice_window = tk.Toplevel()
         self.employee_notice_window.title("Send Employee Notice")
+
+        self.conn = db_connection
 
         # Create and pack entry fields for employee_notice attributes
         self.employee_id_label = tk.Label(self.employee_notice_window, text="Employee ID:")
@@ -176,21 +198,20 @@ class EmployeeNotice:
         publish_date = self.publish_date_entry.get()
 
         # Insert Employee information into the database
-        conn = sqlite3.connect("school_database.db")
-        cursor = conn.cursor()
+        cursor = self.conn.cursor()
+        try:
+            cursor.execute('''INSERT INTO employee_notice (
+                                    employee_id, title, content, publish_date
+                                ) VALUES (?, ?, ?, ?)''',
+                           (employee_id, title, content, publish_date))
+            self.conn.commit()
 
-        cursor.execute('''INSERT INTO employee_notice (
-                                employee_id, title, content, publish_date
-                            ) VALUES (?, ?, ?, ?)''',
-                       (employee_id, title, content, publish_date))
-
-        conn.commit()
-        conn.close()
-
-        # Close the Employee registration window
-        self.employee_notice_window.destroy()
-        messagebox.showinfo("Employee Notice Status Updated", "Employee Notice status"
-                                                              " has been updated for the Employee.")
+            # Close the Employee registration window
+            self.employee_notice_window.destroy()
+            messagebox.showinfo("Employee Notice Status Updated", "Employee Notice status"
+                                                                  " has been updated for the Employee.")
+        except sqlite3.Error as error:
+            messagebox.showerror("Error", str(error))
 
 
 def show_employee_notice_records():
@@ -214,24 +235,27 @@ def show_employee_notice_records():
     tree.configure(xscrollcommand=xscroll.set)
 
     # Fetch Employee records from the database
-    conn = sqlite3.connect("school_database.db")
-    cursor = conn.cursor()
-    cursor.execute("SELECT * FROM employee_notice")
-    employee_records = cursor.fetchall()
-    conn.close()
+    try:
+        conn = sqlite3.connect("school_database.db")
+        cursor = conn.cursor()
+        cursor.execute("SELECT * FROM employee_notice")
+        employee_records = cursor.fetchall()
+        conn.close()
 
-    # Insert Employee records into the treeview
-    for record in employee_records:
-        tree.insert("", "end", values=record)
+        # Insert Employee records into the treeview
+        for record in employee_records:
+            tree.insert("", "end", values=record)
 
-    # Adjust column widths based on content
-    for col in tree["columns"]:
-        tree.column(col, width=tkfont.Font().measure(col) + 10)  # Adjust the width as needed
+        # Adjust column widths based on content
+        for col in tree["columns"]:
+            tree.column(col, width=tkfont.Font().measure(col) + 10)  # Adjust the width as needed
 
-    tree.pack(fill=tk.BOTH, expand=True)
+        tree.pack(fill=tk.BOTH, expand=True)
+    except sqlite3.Error as error:
+        messagebox.showerror("Error", str(error))
 
 
-def delete_employee_notice_record():
+def delete_employee_notice_record(conn):
     # Create a Tkinter window
     notice_window = tk.Tk()
     notice_window.withdraw()  # Hide the main window
@@ -244,15 +268,21 @@ def delete_employee_notice_record():
                                               f"Are you sure you want to delete Employee Notice ID"
                                               f" {emp_notice_id} from the Employee Notices?")
         if confirmation == 'yes':
-            conn = sqlite3.connect("school_database.db")
             cursor = conn.cursor()
 
             # Delete the employee notice record for the specified emp_notice_id
-            cursor.execute("DELETE FROM employee_notice WHERE emp_notice_id = ?", (emp_notice_id,))
+            try:
+                cursor.execute("DELETE FROM employee_notice WHERE emp_notice_id = ?", (emp_notice_id,))
 
-            conn.commit()
-            conn.close()
-            messagebox.showinfo("Deletion Successful", f"Employee notice with ID {emp_notice_id} has been deleted.")
+                conn.commit()
+                if cursor.rowcount > 0:
+                    messagebox.showinfo("Deletion Successful", f"Employee notice with ID {emp_notice_id}"
+                                                               f" has been deleted.")
+                else:
+                    messagebox.showerror("Invalid Input", "No such Course record.")
+            except sqlite3.Error as error:
+                conn.rollback()  # Rollback the transaction in case of an error
+                messagebox.showerror("Error", str(error))
         else:
             messagebox.showinfo("Deletion Canceled", "Employee notice has not been deleted.")
     else:
@@ -262,12 +292,23 @@ def delete_employee_notice_record():
     notice_window.destroy()
 
 
-def delete_all_employee_notice_records():
-    confirmation = messagebox.askquestion("Delete All Records",
-                                          "Are you sure you want to delete all Employee notice records?")
-    if confirmation == 'yes':
-        conn = sqlite3.connect("school_database.db")
-        cursor = conn.cursor()
-        cursor.execute("DELETE FROM employee_notice")
-        conn.commit()
-        messagebox.showinfo("Deletion Successful", "All Employee  notice records have been deleted.")
+def delete_all_employee_notice_records(conn):
+    cursor = conn.cursor()
+    cursor.execute("SELECT COUNT(*) FROM employee_notice")
+    count = cursor.fetchone()[0]
+
+    if count == 0:
+        messagebox.showerror("No Records", "There are no Employee Notice records to delete.")
+    else:
+        confirmation = messagebox.askquestion("Delete All Records",
+                                              "Are you sure you want to delete all Employee notice records?")
+        if confirmation == 'yes':
+            try:
+                cursor.execute("DELETE FROM employee_notice")
+                conn.commit()
+                messagebox.showinfo("Deletion Successful", "All Employee  notice records have been deleted.")
+            except sqlite3.Error as error:
+                conn.rollback()
+                messagebox.showerror("Error", str(error))
+        else:
+            messagebox.showerror("Deletion Canceled", "No Employee Notice records have been deleted.")
