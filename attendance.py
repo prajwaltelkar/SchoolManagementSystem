@@ -7,11 +7,11 @@ from tkinter import simpledialog
 
 
 class AttendanceSystem:
-    def __init__(self, employee_id):
+    def __init__(self, db_connection, employee_id):
 
         # Initialize tkinter
         self.employee_id = employee_id
-        self.conn = sqlite3.connect("school_database.db")
+        self.conn = db_connection
         self.cursor = self.conn.cursor()
         self.attendance_window = tk.Toplevel()
         self.attendance_window.title("Attendance System")
@@ -73,60 +73,64 @@ class AttendanceSystem:
         self.student_names = []
 
     def load_students(self):
-        selected_class = self.class_var.get()
-        if selected_class:
+        try:
+            selected_class = self.class_var.get()
+            if selected_class:
+                class_id = self.cursor.execute("SELECT class_id FROM class WHERE class_name=?",
+                                               (selected_class,)).fetchone()
+                if class_id:
+                    class_id = class_id[0]
+                    students = self.cursor.execute(
+                        "SELECT student_id, first_name, last_name FROM students WHERE class_id=?",
+                        (class_id,)).fetchall()
+                    self.student_ids = [row[0] for row in students]
+                    self.student_names = [f"{row[1]} {row[2]}" for row in students]
+                    self.student_listbox.delete(0, tk.END)
+                    for name in self.student_names:
+                        self.student_listbox.insert(tk.END, name)
+                else:
+                    print("Selected class not found in the database.")
+        except sqlite3.Error as error:
+            messagebox.showerror("Error", str(error))
+
+    def mark_attendance(self):
+        try:
+            selected_class = self.class_var.get()
+            date = self.date_var.get()
+            selected_student = self.student_listbox.get(tk.ACTIVE)
+            student_id = self.student_ids[self.student_names.index(selected_student)]
+            status = self.status_var.get()
+
+            # Check if the logged-in employee is authorized to take attendance for the selected class
+            authorized = self.is_employee_authorized(self.employee_id, selected_class)
+
+            if authorized:
+                # Insert attendance data into the database
+                self.cursor.execute("INSERT INTO attendance (student_id, date, status) VALUES (?, ?, ?)",
+                                    (student_id, date, status))
+                self.conn.commit()
+                messagebox.showinfo("Attendance Marked", f"Attendance for {selected_student} marked"
+                                                         f" successfully.")
+            else:
+                messagebox.showinfo("Authorization Error", "You are not authorized to mark attendance"
+                                                           " for this class.")
+        except sqlite3.Error as error:
+            messagebox.showerror("Error", str(error))
+
+    # Function to check if the employee is authorized to take attendance for the selected class
+    def is_employee_authorized(self, employee_id, selected_class):
+        try:
             class_id = self.cursor.execute("SELECT class_id FROM class WHERE class_name=?",
                                            (selected_class,)).fetchone()
             if class_id:
                 class_id = class_id[0]
-                students = self.cursor.execute(
-                    "SELECT student_id, first_name, last_name FROM students WHERE class_id=?",
-                    (class_id,)).fetchall()
-                self.student_ids = [row[0] for row in students]
-                self.student_names = [f"{row[1]} {row[2]}" for row in students]
-                self.student_listbox.delete(0, tk.END)
-                for name in self.student_names:
-                    self.student_listbox.insert(tk.END, name)
-            else:
-                print("Selected class not found in the database.")
-
-    def mark_attendance(self):
-        selected_class = self.class_var.get()
-        date = self.date_var.get()
-        selected_student = self.student_listbox.get(tk.ACTIVE)
-        student_id = self.student_ids[self.student_names.index(selected_student)]
-        status = self.status_var.get()
-
-        # # Insert attendance data into the database
-        # self.cursor.execute("INSERT INTO attendance (student_id, date, status) VALUES (?, ?, ?)",
-        #                     (student_id, date, status))
-        # self.conn.commit()
-        #
-        # # Clear the status variable
-        # self.status_var.set("Absent")
-
-        # Check if the logged-in employee is authorized to take attendance for the selected class
-        authorized = self.is_employee_authorized(self.employee_id, selected_class)
-
-        if authorized:
-            # Insert attendance data into the database
-            self.cursor.execute("INSERT INTO attendance (student_id, date, status) VALUES (?, ?, ?)",
-                                (student_id, date, status))
-            self.conn.commit()
-            messagebox.showinfo("Attendance Marked", f"Attendance for {selected_student} marked successfully.")
-        else:
-            messagebox.showinfo("Authorization Error", "You are not authorized to mark attendance for this class.")
-
-    # Function to check if the employee is authorized to take attendance for the selected class
-    def is_employee_authorized(self, employee_id, selected_class):
-        class_id = self.cursor.execute("SELECT class_id FROM class WHERE class_name=?", (selected_class,)).fetchone()
-        if class_id:
-            class_id = class_id[0]
-            # Check if there is a record in the employee_class table with the given employee_id and class_id
-            record_exists = self.cursor.execute("SELECT * FROM employee_class WHERE employee_id=? AND class_id=?",
-                                                (employee_id, class_id)).fetchone()
-            return bool(record_exists)
-        return False
+                # Check if there is a record in the employee_class table with the given employee_id and class_id
+                record_exists = self.cursor.execute("SELECT * FROM employee_class WHERE employee_id=? AND class_id=?",
+                                                    (employee_id, class_id)).fetchone()
+                return bool(record_exists)
+            return False
+        except sqlite3.Error as error:
+            messagebox.showerror("Error", str(error))
 
 
 class AttendanceViewer:
@@ -167,29 +171,34 @@ class AttendanceViewer:
         self.view_attendance_button.pack()
 
     def show_attendance(self):
-        selected_class = self.class_var.get()
-        selected_date = self.date_var.get()
+        try:
+            selected_class = self.class_var.get()
+            selected_date = self.date_var.get()
 
-        class_id = self.cursor.execute("SELECT class_id FROM class WHERE class_name=?", (selected_class,)).fetchone()[0]
-        attendance_data = self.cursor.execute(
-            "SELECT students.first_name, students.last_name, attendance.status FROM students JOIN attendance ON students.student_id = attendance.student_id WHERE students.class_id=? AND attendance.date=?",
-            (class_id, selected_date)).fetchall()
+            class_id = self.cursor.execute("SELECT class_id FROM class WHERE class_name=?", (selected_class,)).fetchone()[0]
+            attendance_data = self.cursor.execute(
+                "SELECT students.first_name, students.last_name, attendance.status FROM students JOIN attendance ON students.student_id = attendance.student_id WHERE students.class_id=? AND attendance.date=?",
+                (class_id, selected_date)).fetchall()
 
-        # Create a new tkinter window to display attendance
-        attendance_window = tk.Toplevel(self.attendance_view_window)
-        attendance_window.title("Attendance for {} on {}".format(selected_class, selected_date))
+            # Create a new tkinter window to display attendance
+            attendance_window = tk.Toplevel(self.attendance_view_window)
+            attendance_window.title("Attendance for {} on {}".format(selected_class, selected_date))
 
-        # Create a table to display attendance
-        table = ttk.Treeview(attendance_window, columns=("Name", "Status"), show="headings")
-        table.heading("Name", text="Name")
-        table.heading("Status", text="Status")
-        table.pack()
+            # Create a table to display attendance
+            table = ttk.Treeview(attendance_window, columns=("Name", "Status"), show="headings")
+            table.heading("Name", text="Name")
+            table.heading("Status", text="Status")
+            table.pack()
 
-        # Populate the table with attendance data
-        for student_data in attendance_data:
-            student_name = f"{student_data[0]} {student_data[1]}"
-            status = student_data[2]
-            table.insert("", "end", values=(student_name, status))
+            # Populate the table with attendance data
+            for student_data in attendance_data:
+                student_name = f"{student_data[0]} {student_data[1]}"
+                status = student_data[2]
+                table.insert("", "end", values=(student_name, status))
+
+        except sqlite3.Error as error:
+            self.conn.rollback()
+            messagebox.showerror("Error", str(error))
 
 
 def show_attendance_records():
@@ -210,24 +219,28 @@ def show_attendance_records():
     tree.configure(xscrollcommand=xscroll.set)
 
     # Fetch student records from the database
-    conn = sqlite3.connect("school_database.db")
-    cursor = conn.cursor()
-    cursor.execute("SELECT * FROM attendance")
-    student_records = cursor.fetchall()
-    conn.close()
+    try:
+        conn = sqlite3.connect("school_database.db")
+        cursor = conn.cursor()
+        cursor.execute("SELECT * FROM attendance")
+        student_records = cursor.fetchall()
+        conn.close()
 
-    # Insert student records into the treeview
-    for record in student_records:
-        tree.insert("", "end", values=record)
+        # Insert student records into the treeview
+        for record in student_records:
+            tree.insert("", "end", values=record)
 
-    # Adjust column widths based on content
-    for col in tree["columns"]:
-        tree.column(col, width=tkfont.Font().measure(col) + 10)  # Adjust the width as needed
+        # Adjust column widths based on content
+        for col in tree["columns"]:
+            tree.column(col, width=tkfont.Font().measure(col) + 10)  # Adjust the width as needed
 
-    tree.pack(fill=tk.BOTH, expand=True)
+        tree.pack(fill=tk.BOTH, expand=True)
+
+    except sqlite3.Error as error:
+        messagebox.showerror("Error", str(error))
 
 
-def delete_attendance():
+def delete_attendance(conn):
     attendance_window = tk.Tk()
     attendance_window.withdraw()  # Hide the main window
 
@@ -240,25 +253,44 @@ def delete_attendance():
                                               f"Are you sure you want to delete {student_id}"
                                               f" Attendance record on {date}?")
         if confirmation == 'yes':
-            conn = sqlite3.connect("school_database.db")
-            cursor = conn.cursor()
-            cursor.execute("DELETE FROM attendance WHERE student_id = ? AND date = ?",
-                           (student_id, date))
-            conn.commit()
-            messagebox.showinfo("Deletion Successful", "Attendance record has been deleted.")
+            try:
+                cursor = conn.cursor()
+                cursor.execute("DELETE FROM attendance WHERE student_id = ? AND date = ?",
+                               (student_id, date))
+                conn.commit()
+                if cursor.rowcount > 0:
+                    messagebox.showinfo("Deletion Successful", "Attendance record has been deleted.")
+                else:
+                    messagebox.showerror("Invalid Input", "No such Attendance record.")
+            except sqlite3.Error as error:
+                conn.rollback()  # Rollback the transaction in case of an error
+                messagebox.showerror("Error", str(error))
+        else:
+            messagebox.showerror("Deletion Canceled", "Attendance record has not been deleted.")
     else:
-        messagebox.showinfo("Deletion Unsuccessful", "Attendance record has not been deleted.")
+        messagebox.showerror("Invalid Input", "Please provide a valid Student ID and Date.")
 
     # Close the Tkinter window
     attendance_window.destroy()
 
 
-def delete_all_attendance_records():
-    confirmation = messagebox.askquestion("Delete All Records",
-                                          "Are you sure you want to delete all Attendance records?")
-    if confirmation == 'yes':
-        conn = sqlite3.connect("school_database.db")
-        cursor = conn.cursor()
-        cursor.execute("DELETE FROM attendance")
-        conn.commit()
-        messagebox.showinfo("Deletion Successful", "All Attendance records have been deleted.")
+def delete_all_attendance_records(conn):
+    cursor = conn.cursor()
+    cursor.execute("SELECT COUNT(*) FROM attendance")
+    count = cursor.fetchone()[0]
+
+    if count == 0:
+        messagebox.showerror("No Records", "There are no Attendance records to delete.")
+    else:
+        confirmation = messagebox.askquestion("Delete All Records",
+                                              "Are you sure you want to delete all Attendance records?")
+        if confirmation == 'yes':
+            try:
+                cursor.execute("DELETE FROM attendance")
+                conn.commit()
+                messagebox.showinfo("Deletion Successful", "All Attendance records have been deleted.")
+            except sqlite3.Error as error:
+                conn.rollback()
+                messagebox.showerror("Error", str(error))
+        else:
+            messagebox.showerror("Deletion Canceled", "No Attendance records have been deleted.")

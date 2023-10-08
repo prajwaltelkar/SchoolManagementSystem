@@ -243,8 +243,8 @@ class LoginPage:
         attendance_buttons = [
             ("Attendance Viewer", AttendanceViewer),
             ("Show Complete Attendance\nRecords", show_attendance_records),
-            ("Delete attendance record", delete_attendance),
-            ("Delete All Attendance\nRecords", delete_all_attendance_records)
+            ("Delete attendance record", lambda: delete_attendance(self.conn)),
+            ("Delete All Attendance\nRecords", lambda: delete_all_attendance_records(self.conn))
         ]
 
         grades_buttons = [
@@ -331,7 +331,7 @@ class LoginPage:
 
         # Create buttons for employee actions
         attendance_buttons = [
-            ("Attendance", lambda: AttendanceSystem(self.username)),
+            ("Attendance", lambda: AttendanceSystem(self.conn, self.username)),
             ("Attendance Viewer", AttendanceViewer),
         ]
 
