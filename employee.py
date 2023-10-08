@@ -8,10 +8,12 @@ from tkinter import simpledialog
 
 
 class Employee:
-    def __init__(self):
+    def __init__(self, db_connection):
         # Create a new window for employee registration
         self.employee_window = tk.Toplevel()
         self.employee_window.title("Register Employee")
+
+        self.conn = db_connection
 
         # Create and pack entry fields for employee attributes
         employee_id_label = tk.Label(self.employee_window, text="Employee ID:")
@@ -92,21 +94,19 @@ class Employee:
         salary = self.salary_entry.get()
         password = self.password_entry.get()
 
-        conn = sqlite3.connect("school_database.db")
-        cursor = conn.cursor()
-
-        cursor.execute('''INSERT INTO employees (
-                            employee_id, first_name, last_name, dob, address, contact_number, date_of_join, role, 
-                            designation, email, salary, password
-                        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)''',
-                       (employee_id, first_name, last_name, dob, address,
-                        contact_number, doj, role, designation, email, salary, password))
-
-        self.employee_window.destroy()
-        messagebox.showinfo("Successful", "Employee Created!")
-
-        conn.commit()
-        conn.close()
+        try:
+            cursor = self.conn.cursor()
+            cursor.execute('''INSERT INTO employees (
+                                employee_id, first_name, last_name, dob, address, contact_number, date_of_join, role, 
+                                designation, email, salary, password
+                            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)''',
+                           (employee_id, first_name, last_name, dob, address,
+                            contact_number, doj, role, designation, email, salary, password))
+            self.employee_window.destroy()
+            messagebox.showinfo("Successful", "Employee Created!")
+            self.conn.commit()
+        except sqlite3.Error as error:
+            messagebox.showerror("Error", str(error))
 
 
 def show_employee_records():
@@ -116,7 +116,8 @@ def show_employee_records():
 
     # Create a treeview widget to display records
     tree = ttk.Treeview(records_window, columns=("Employee ID", "First Name", "Last Name", "DOB", "Address",
-                                                 "Contact Number", "Date Of Joining", "Role", "Designation", "Email", "Salary", "Password"))
+                                                 "Contact Number", "Date Of Joining", "Role", "Designation", "Email",
+                                                 "Salary", "Password"))
     tree.heading("#0", text="Employee Records")
     tree.heading("#1", text="Employee ID")
     tree.heading("#2", text="First Name")
@@ -154,7 +155,7 @@ def show_employee_records():
     tree.pack(fill=tk.BOTH, expand=True)
 
 
-def delete_employee():
+def delete_employee(conn):
     # Create a Tkinter window
     employee_window = tk.Tk()
     employee_window.withdraw()
@@ -166,12 +167,18 @@ def delete_employee():
         confirmation = messagebox.askquestion("Delete Employee",
                                               f"Are you sure you want to delete Employee ID {employee_id} from the Employee records?")
         if confirmation == 'yes':
-            conn = sqlite3.connect("school_database.db")
             cursor = conn.cursor()
-            cursor.execute("DELETE FROM employees WHERE employee_id = ?", (employee_id,))
-            conn.commit()
-            conn.close()  # Close the database connection
-            messagebox.showinfo("Deletion Successful", f"Employee record with ID {employee_id} has been deleted.")
+            try:
+                cursor.execute("DELETE FROM employees WHERE employee_id = ?", (employee_id,))
+                conn.commit()
+                if cursor.rowcount > 0:
+                    messagebox.showinfo("Deletion Successful",
+                                        f"Employee record with ID {employee_id} has been deleted.")
+                else:
+                    messagebox.showerror("Invalid Input", "No such Employee record.")
+            except sqlite3.Error as error:
+                conn.rollback()  # Rollback the transaction in case of an error
+                messagebox.showerror("Error", str(error))
         else:
             messagebox.showinfo("Deletion Canceled", "Employee record has not been deleted.")
     else:
@@ -181,15 +188,26 @@ def delete_employee():
     employee_window.destroy()
 
 
-def delete_all_employee_records():
-    confirmation = messagebox.askquestion("Delete All Records",
-                                          "Are you sure you want to delete all employee records?")
-    if confirmation == 'yes':
-        conn = sqlite3.connect("school_database.db")
-        cursor = conn.cursor()
-        cursor.execute("DELETE FROM employees")
-        conn.commit()
-        messagebox.showinfo("Deletion Successful", "All employee records have been deleted.")
+def delete_all_employee_records(conn):
+    cursor = conn.cursor()
+    cursor.execute("SELECT COUNT(*) FROM employees")
+    count = cursor.fetchone()[0]
+
+    if count == 0:
+        messagebox.showerror("No Records", "There are no Employee records to delete.")
+    else:
+        confirmation = messagebox.askquestion("Delete All Records",
+                                              "Are you sure you want to delete all employee records?")
+        if confirmation == 'yes':
+            try:
+                cursor.execute("DELETE FROM employees")
+                conn.commit()
+                messagebox.showinfo("Deletion Successful", "All employee records have been deleted.")
+            except sqlite3.Error as error:
+                conn.rollback()
+                messagebox.showerror("Error", str(error))
+        else:
+            messagebox.showerror("Deletion Canceled", "No Employee records have been deleted.")
 
 
 def authenticate_teacher(employee_id, employee_password):

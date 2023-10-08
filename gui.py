@@ -185,10 +185,10 @@ class LoginPage:
 
         # Create buttons for admin actions
         employee_buttons = [
-            ("Register Employee", Employee),
+            ("Register Employee", lambda: Employee(self.conn)),
             ("Show Employee Records", show_employee_records),
-            ("Delete Employee", delete_employee),
-            ("Delete All Employee Records", delete_all_employee_records)
+            ("Delete Employee", lambda: delete_employee(self.conn)),
+            ("Delete All Employee Records", lambda: delete_all_employee_records(self.conn))
         ]
 
         course_buttons = [
