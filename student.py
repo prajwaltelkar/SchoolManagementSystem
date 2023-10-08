@@ -13,9 +13,11 @@ from tkinter import scrolledtext, simpledialog
 
 
 class Student:
-    def __init__(self):
+    def __init__(self, db_connection):
         self.student_window = tk.Toplevel()
         self.student_window.title("Register Student")
+
+        self.conn = db_connection
 
         # Create and pack entry fields for student attributes
         self.student_id_label = tk.Label(self.student_window, text="Student ID:")
@@ -105,22 +107,23 @@ class Student:
         class_id = self.class_id_entry.get()
 
         # Insert student information into the database
-        conn = sqlite3.connect("school_database.db")
-        cursor = conn.cursor()
+        cursor = self.conn.cursor()
 
-        cursor.execute('''INSERT INTO students (
-                            student_id, first_name, last_name, dob, address, contact_number, 
-                            father_name, mother_name, enrollment_date, gender, email, password, class_id
-                        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)''',
-                       (student_id, first_name, last_name, dob, address, contact_number,
-                        father_name, mother_name, enrollment_date, gender, email, password, class_id))
+        try:
+            cursor.execute('''INSERT INTO students (
+                                student_id, first_name, last_name, dob, address, contact_number, 
+                                father_name, mother_name, enrollment_date, gender, email, password, class_id
+                            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)''',
+                           (student_id, first_name, last_name, dob, address, contact_number,
+                            father_name, mother_name, enrollment_date, gender, email, password, class_id))
 
-        conn.commit()
-        conn.close()
+            self.conn.commit()
 
-        # Close the student registration window
-        self.student_window.destroy()
-        messagebox.showinfo("Registration Successful", "Student Registered!")
+            # Close the student registration window
+            self.student_window.destroy()
+            messagebox.showinfo("Registration Successful", "Student Registered!")
+        except sqlite3.Error as error:
+            messagebox.showerror("Error", str(error))
 
 
 def show_student_records():
@@ -154,11 +157,14 @@ def show_student_records():
     tree.configure(xscrollcommand=xscroll.set)
 
     # Fetch student records from the database
-    conn = sqlite3.connect("school_database.db")
-    cursor = conn.cursor()
-    cursor.execute("SELECT * FROM students")
-    student_records = cursor.fetchall()
-    conn.close()
+    try:
+        conn = sqlite3.connect("school_database.db")
+        cursor = conn.cursor()
+        cursor.execute("SELECT * FROM students")
+        student_records = cursor.fetchall()
+        conn.close()
+    except sqlite3.Error as error:
+        messagebox.showerror("Error", str(error))
 
     # Insert student records into the treeview
     for record in student_records:
@@ -171,7 +177,7 @@ def show_student_records():
     tree.pack(fill=tk.BOTH, expand=True)
 
 
-def delete_student():
+def delete_student(conn):
     student_window = tk.Tk()
     student_window.withdraw()  # Hide the main window
 
@@ -183,15 +189,18 @@ def delete_student():
                                               f"Are you sure you want to delete Student ID {student_id} "
                                               f"from the Student records?")
         if confirmation == 'yes':
-            conn = sqlite3.connect("school_database.db")
             cursor = conn.cursor()
-
             # Delete the student record for the specified student_id
-            cursor.execute("DELETE FROM students WHERE student_id = ?", (student_id,))
-
-            conn.commit()
-            conn.close()
-            messagebox.showinfo("Deletion Successful", f"Student record with ID {student_id} has been deleted.")
+            try:
+                cursor.execute("DELETE FROM students WHERE student_id = ?", (student_id,))
+                conn.commit()
+                if cursor.rowcount > 0:
+                    messagebox.showinfo("Deletion Successful", f"Student record with ID {student_id} has been deleted.")
+                else:
+                    messagebox.showerror("Invalid Input", "No such Student record.")
+            except sqlite3.Error as error:
+                conn.rollback()  # Rollback the transaction in case of an error
+                messagebox.showerror("Error", str(error))
         else:
             messagebox.showinfo("Deletion Canceled", "Student record has not been deleted.")
     else:
@@ -201,15 +210,27 @@ def delete_student():
     student_window.destroy()
 
 
-def delete_all_student_records():
-    confirmation = messagebox.askquestion("Delete All Records",
-                                          "Are you sure you want to delete all student records?")
-    if confirmation == 'yes':
-        conn = sqlite3.connect("school_database.db")
-        cursor = conn.cursor()
-        cursor.execute("DELETE FROM students")
-        conn.commit()
-        messagebox.showinfo("Deletion Successful", "All student records have been deleted.")
+def delete_all_student_records(conn):
+    cursor = conn.cursor()
+    cursor.execute("SELECT COUNT(*) FROM students")
+    count = cursor.fetchone()[0]
+
+    if count == 0:
+        messagebox.askquestion("Delete All Records",
+                               "Are you sure you want to delete all student records?")
+    else:
+        confirmation = messagebox.askquestion("Delete All Records",
+                                              "Are you sure you want to delete all Students records?")
+        if confirmation == 'yes':
+            try:
+                cursor.execute("DELETE FROM students")
+                conn.commit()
+                messagebox.showinfo("Deletion Successful", "All student records have been deleted.")
+            except sqlite3.Error as error:
+                conn.rollback()
+                messagebox.showerror("Error", str(error))
+        else:
+            messagebox.showerror("Deletion Canceled", "No student records have been deleted.")
 
 
 def fetch_student_grades(student_id):
@@ -607,4 +628,5 @@ def view_report(student_id):
 
         # Close the database connection
         conn.close()
-        generate_pdf_report(student_name, student_id, attendance_percentage, grade_report, total_marks, total_percentage)
+        generate_pdf_report(student_name, student_id, attendance_percentage, grade_report, total_marks,
+                            total_percentage)

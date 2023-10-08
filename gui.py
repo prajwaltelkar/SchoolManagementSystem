@@ -213,10 +213,10 @@ class LoginPage:
         ]
 
         student_buttons = [
-            ("Register Student", Student),
+            ("Register Student", lambda: Student(self.conn)),
             ("Show Student Records", show_student_records),
-            ("Delete Student", delete_student),
-            ("Delete All Student Records", delete_all_student_records)
+            ("Delete Student", lambda: delete_student(self.conn)),
+            ("Delete All Student Records", lambda: delete_all_student_records(self.conn))
         ]
 
         fee_buttons = [
