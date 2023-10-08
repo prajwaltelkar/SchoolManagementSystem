@@ -53,7 +53,7 @@ class LoginPage:
 
         # Create a Text widget to display welcome message (left half)
         welcome_text = """
-                        Prajwal S Telkar International School, located in the heart of Bangalore,\n
+                        Prajwal S Telkar International School, located in the heart of Bengaluru,\n
                         is a well-known school in India. People from all over the country recognize\n 
                         the quality of education we offer. Our school is really big,and we have amazing\n 
                         facilities. The classrooms are modern, and our labs are super cool. It's a great\n 
