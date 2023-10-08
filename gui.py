@@ -220,10 +220,10 @@ class LoginPage:
         ]
 
         fee_buttons = [
-            ("Update Fee Payment\nStatus", Fee),
+            ("Update Fee Payment\nStatus", Fee(self.conn)),
             ("Show Fee Records", show_fee_records),
-            ("Delete Fee Record", delete_fee),
-            ("Delete All Fee\nRecords", delete_all_fee_records)
+            ("Delete Fee Record", delete_fee(self.conn)),
+            ("Delete All Fee\nRecords", delete_all_fee_records(self.conn))
         ]
 
         student_notice_buttons = [

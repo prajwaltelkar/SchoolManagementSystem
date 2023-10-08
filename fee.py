@@ -6,9 +6,11 @@ import tkinter.font as tkfont
 
 
 class Fee:
-    def __init__(self):
+    def __init__(self, db_connection):
         self.fee_window = tk.Toplevel()
         self.fee_window.title("Register fee")
+
+        self.conn = db_connection
 
         # Create and pack entry fields for fee attributes
         self.student_id_label = tk.Label(self.fee_window, text="Student ID:")
@@ -49,20 +51,20 @@ class Fee:
         academic_year = self.academic_year_entry.get()
 
         # Insert student information into the database
-        conn = sqlite3.connect("school_database.db")
-        cursor = conn.cursor()
+        cursor = self.conn.cursor()
+        try:
+            cursor.execute('''INSERT INTO fee_payments (
+                                    student_id, amount, payment_date, payment_status, academic_year
+                                ) VALUES (?, ?, ?, ?, ?)''',
+                           (student_id, amount, payment_date, payment_status, academic_year))
 
-        cursor.execute('''INSERT INTO fee_payments (
-                                student_id, amount, payment_date, payment_status, academic_year
-                            ) VALUES (?, ?, ?, ?, ?)''',
-                       (student_id, amount, payment_date, payment_status, academic_year))
+            self.conn.commit()
 
-        conn.commit()
-        conn.close()
-
-        # Close the student registration window
-        self.fee_window.destroy()
-        messagebox.showinfo("Fee Status Updated", "Fee status has been updated for the student.")
+            # Close the student registration window
+            self.fee_window.destroy()
+            messagebox.showinfo("Fee Status Updated", "Fee status has been updated for the student.")
+        except sqlite3.Error as error:
+            messagebox.showerror("Error", str(error))
 
 
 def show_fee_records():
@@ -87,24 +89,28 @@ def show_fee_records():
     tree.configure(xscrollcommand=xscroll.set)
 
     # Fetch student records from the database
-    conn = sqlite3.connect("school_database.db")
-    cursor = conn.cursor()
-    cursor.execute("SELECT * FROM fee_payments")
-    student_records = cursor.fetchall()
-    conn.close()
+    try:
+        conn = sqlite3.connect("school_database.db")
+        cursor = conn.cursor()
+        cursor.execute("SELECT * FROM fee_payments")
+        student_records = cursor.fetchall()
+        conn.close()
 
-    # Insert student records into the treeview
-    for record in student_records:
-        tree.insert("", "end", values=record)
+        # Insert student records into the treeview
+        for record in student_records:
+            tree.insert("", "end", values=record)
 
-    # Adjust column widths based on content
-    for col in tree["columns"]:
-        tree.column(col, width=tkfont.Font().measure(col) + 10)  # Adjust the width as needed
+        # Adjust column widths based on content
+        for col in tree["columns"]:
+            tree.column(col, width=tkfont.Font().measure(col) + 10)  # Adjust the width as needed
 
-    tree.pack(fill=tk.BOTH, expand=True)
+        tree.pack(fill=tk.BOTH, expand=True)
+
+    except sqlite3.Error as error:
+        messagebox.showerror("Error", str(error))
 
 
-def delete_fee():
+def delete_fee(conn):
     # Create a Tkinter window
     fee_window = tk.Tk()
     fee_window.withdraw()  # Hide the main window
@@ -116,15 +122,20 @@ def delete_fee():
         confirmation = messagebox.askquestion("Delete Fee Payment",
                                               f"Are you sure you want to delete Payment ID {payment_id} from the Fee Payments?")
         if confirmation == 'yes':
-            conn = sqlite3.connect("school_database.db")
             cursor = conn.cursor()
 
             # Delete the fee payment record for the specified payment_id
-            cursor.execute("DELETE FROM fee_payments WHERE payment_id = ?", (payment_id,))
-
-            conn.commit()
-            conn.close()
-            messagebox.showinfo("Deletion Successful", f"Fee payment record with ID {payment_id} has been deleted.")
+            try:
+                cursor.execute("DELETE FROM fee_payments WHERE payment_id = ?", (payment_id,))
+                conn.commit()
+                if cursor.rowcount > 0:
+                    messagebox.showinfo("Deletion Successful",
+                                        f"Fee payment record with ID {payment_id} has been deleted.")
+                else:
+                    messagebox.showerror("Invalid Input", "No such Fee record.")
+            except sqlite3.Error as error:
+                conn.rollback()  # Rollback the transaction in case of an error
+                messagebox.showerror("Error", str(error))
         else:
             messagebox.showinfo("Deletion Canceled", "Fee payment record has not been deleted.")
     else:
@@ -133,12 +144,24 @@ def delete_fee():
     # Close the Tkinter window
     fee_window.destroy()
 
-def delete_all_fee_records():
-    confirmation = messagebox.askquestion("Delete All Records",
-                                          "Are you sure you want to delete all student fee records?")
-    if confirmation == 'yes':
-        conn = sqlite3.connect("school_database.db")
-        cursor = conn.cursor()
-        cursor.execute("DELETE FROM fee_payments")
-        conn.commit()
-        messagebox.showinfo("Deletion Successful", "All student fee records have been deleted.")
+
+def delete_all_fee_records(conn):
+    cursor = conn.cursor()
+    cursor.execute("SELECT COUNT(*) FROM fee_payments")
+    count = cursor.fetchone()[0]
+
+    if count == 0:
+        messagebox.showerror("No Records", "There are no Course records to delete.")
+    else:
+        confirmation = messagebox.askquestion("Delete All Records",
+                                              "Are you sure you want to delete all student fee records?")
+        if confirmation == 'yes':
+            try:
+                cursor.execute("DELETE FROM fee_payments")
+                conn.commit()
+                messagebox.showinfo("Deletion Successful", "All student fee records have been deleted.")
+            except sqlite3.Error as error:
+                conn.rollback()
+                messagebox.showerror("Error", str(error))
+        else:
+            messagebox.showerror("Deletion Canceled", "No Fee records have been deleted.")
