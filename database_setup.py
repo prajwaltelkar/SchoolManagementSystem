@@ -39,7 +39,6 @@ def create_class_table(conn):
     cursor.execute('''CREATE TABLE IF NOT EXISTS class (
                     class_id INTEGER PRIMARY KEY,
                     class_name TEXT,
-                    course_id INTEGER,
                     FOREIGN KEY (course_id) REFERENCES course (course_id)
                     )''')
     conn.commit()

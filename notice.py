@@ -55,8 +55,8 @@ class StudentNotice:
 
             # Close the student registration window
             self.student_notice_window.destroy()
-            messagebox.showinfo("Student Notice Status Updated", "Student Notice status"
-                                                                 " has been updated for the student.")
+            messagebox.showinfo("Student Notice Status Updated", "Student Notice"
+                                                                 " has been sent to the student.")
         except sqlite3.Error as error:
             messagebox.showerror("Error", str(error))
 
@@ -208,8 +208,8 @@ class EmployeeNotice:
 
             # Close the Employee registration window
             self.employee_notice_window.destroy()
-            messagebox.showinfo("Employee Notice Status Updated", "Employee Notice status"
-                                                                  " has been updated for the Employee.")
+            messagebox.showinfo("Employee Notice Status Updated", "Employee Notice"
+                                                                  " has been sent the Employee.")
         except sqlite3.Error as error:
             messagebox.showerror("Error", str(error))
 
