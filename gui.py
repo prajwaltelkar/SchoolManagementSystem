@@ -9,7 +9,8 @@ from student import (Student, show_student_records, delete_all_student_records, 
 from classroom import ClassRoom, show_class_records, delete_all_class_records, delete_class
 from course import Course, show_course_records, delete_all_course_records, delete_course
 from employee import (Employee, show_employee_records, delete_all_employee_records, display_employee_notices,
-                      authenticate_teacher, authenticate_non_teacher, delete_employee)
+                      authenticate_teacher, authenticate_non_teacher, delete_employee,
+                      window_for_update_employee_record)
 from fee import Fee, show_fee_records, delete_all_fee_records, delete_fee
 from notice import (StudentNotice, EmployeeNotice, show_student_notice_records, delete_all_student_notice_records,
                     show_employee_notice_records, delete_all_employee_notice_records, delete_student_notice_record,
@@ -197,8 +198,9 @@ class LoginPage:
         employee_buttons = [
             ("Register Employee", lambda: Employee(self.conn)),
             ("Show Employee Records", show_employee_records),
+            ("Update Employee Records", lambda: window_for_update_employee_record(self.conn)),
             ("Delete Employee", lambda: delete_employee(self.conn)),
-            ("Delete All Employee Records", lambda: delete_all_employee_records(self.conn))
+            ("Delete All Employee\nRecords", lambda: delete_all_employee_records(self.conn))
         ]
 
         course_buttons = [
@@ -226,7 +228,7 @@ class LoginPage:
             ("Register Student", lambda: Student(self.conn)),
             ("Show Student Records", show_student_records),
             ("Delete Student", lambda: delete_student(self.conn)),
-            ("Delete All Student Records", lambda: delete_all_student_records(self.conn))
+            ("Delete All Student\nRecords", lambda: delete_all_student_records(self.conn))
         ]
 
         fee_buttons = [
@@ -295,7 +297,7 @@ class LoginPage:
     def create_buttons(self, buttons_info, row_start, col_start):
         for i, (text, command) in enumerate(buttons_info):
             button = tk.Button(self.admin_window, text=text, command=command, bg="#FDF5E6",
-                               font=("Calibre", 8, "bold"))
+                               font=("Calibre", 8, "bold"), width=20, height=3)
             button.grid(row=row_start + i, column=col_start, padx=10, pady=10, sticky="nsew")
             self.admin_window.grid_columnconfigure(col_start, weight=1)
 

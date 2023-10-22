@@ -270,3 +270,138 @@ def display_employee_notices(employee_id):
 
     # Disable text editing in the widget
     text_widget.config(state=tk.DISABLED)
+
+
+# Function to update employee information
+def window_for_update_employee_record(conn):
+    # Create a new window for employee registration
+    update_employee_window = tk.Toplevel()
+    update_employee_window.title("Update Employee Details")
+
+    # Employee ID input field
+    employee_id_label = tk.Label(update_employee_window, text="Enter Employee ID:")
+    employee_id_label.grid(row=0, column=0)
+    employee_id_entry = tk.Entry(update_employee_window)
+    employee_id_entry.grid(row=0, column=1)
+    get_info_button = tk.Button(update_employee_window, text="Get Employee Info",
+                                command=lambda: update_employee_info(conn, employee_id_entry, info_label))
+    get_info_button.grid(row=0, column=2)
+
+    # Information label
+    info_label = tk.Label(update_employee_window, text="")
+    info_label.grid(row=1, column=0, columnspan=2)
+
+
+def update_employee_info(conn, employee_id_entry, info_label):
+    try:
+        # Get the employee ID from the user
+        employee_id = int(employee_id_entry.get())
+
+        # Check if the employee ID exists in the database
+        cursor = conn.cursor()
+        cursor.execute("SELECT * FROM employees WHERE employee_id = ?", (employee_id,))
+        employee = cursor.fetchone()
+
+        if employee:
+            # Create a separate pop-up window for displaying and updating the current information
+            current_info_window = tk.Toplevel()
+            current_info_window.title(f"Update Information for Employee ID {employee_id}")
+
+            # Labels (keys) next to the white space for updated information
+            first_name_label = tk.Label(current_info_window, text="First Name:")
+            last_name_label = tk.Label(current_info_window, text="Last Name:")
+            dob_label = tk.Label(current_info_window, text="Date of Birth (dd-mm-yyyy):")
+            address_label = tk.Label(current_info_window, text="Address:")
+            contact_number_label = tk.Label(current_info_window, text="Contact Number:")
+            date_of_join_label = tk.Label(current_info_window, text="Date of Join:")
+            designation_label = tk.Label(current_info_window, text="Designation:")
+            email_label = tk.Label(current_info_window, text="Email:")
+            salary_label = tk.Label(current_info_window, text="Salary:")
+            password_label = tk.Label(current_info_window, text="Password:")
+
+            first_name_label.grid(row=0, column=0, sticky='e')
+            last_name_label.grid(row=1, column=0, sticky='e')
+            dob_label.grid(row=2, column=0, sticky='e')
+            address_label.grid(row=3, column=0, sticky='e')
+            contact_number_label.grid(row=4, column=0, sticky='e')
+            date_of_join_label.grid(row=5, column=0, sticky='e')
+            designation_label.grid(row=7, column=0, sticky='e')
+            email_label.grid(row=8, column=0, sticky='e')
+            salary_label.grid(row=9, column=0, sticky='e')
+            password_label.grid(row=10, column=0, sticky='e')
+
+            # Entry fields for updated information
+            new_first_name_entry = tk.Entry(current_info_window, width=30)
+            new_last_name_entry = tk.Entry(current_info_window, width=30)
+            new_dob_entry = tk.Entry(current_info_window, width=30)
+            new_address_entry = tk.Entry(current_info_window, width=30)
+            new_contact_number_entry = tk.Entry(current_info_window, width=30)
+            new_date_of_join_entry = tk.Entry(current_info_window, width=30)
+            new_designation_entry = tk.Entry(current_info_window, width=30)
+            new_email_entry = tk.Entry(current_info_window, width=30)
+            new_salary_entry = tk.Entry(current_info_window, width=30)
+            new_password_entry = tk.Entry(current_info_window, width=30)
+
+            new_first_name_entry.grid(row=0, column=1, pady=5)
+            new_last_name_entry.grid(row=1, column=1, pady=5)
+            new_dob_entry.grid(row=2, column=1, pady=5)
+            new_address_entry.grid(row=3, column=1, pady=5)
+            new_contact_number_entry.grid(row=4, column=1, pady=5)
+            new_date_of_join_entry.grid(row=5, column=1, pady=5)
+            new_designation_entry.grid(row=7, column=1, pady=5)
+            new_email_entry.grid(row=8, column=1, pady=5)
+            new_salary_entry.grid(row=9, column=1, pady=5)
+            new_password_entry.grid(row=10, column=1, pady=5)
+
+            # Update button in the pop-up window
+            update_button = tk.Button(current_info_window, text="Update Information",
+                                      command=lambda: [update_info_in_database(employee_id, new_first_name_entry.get(),
+                                                                               new_last_name_entry.get(),
+                                                                               new_dob_entry.get(),
+                                                                               new_address_entry.get(),
+                                                                               new_contact_number_entry.get(),
+                                                                               new_date_of_join_entry.get(),
+                                                                               new_designation_entry.get(),
+                                                                               new_email_entry.get(),
+                                                                               new_salary_entry.get(),
+                                                                               new_password_entry.get(), info_label,
+                                                                               conn),
+                                                       current_info_window.destroy()])  # Close the window
+            update_button.grid(row=11, column=0, columnspan=2, pady=10)
+
+            # Populate the input fields with the current information
+            new_first_name_entry.insert(0, employee[1])
+            new_last_name_entry.insert(0, employee[2])
+            new_dob_entry.insert(0, employee[3])
+            new_address_entry.insert(0, employee[4])
+            new_contact_number_entry.insert(0, employee[5])
+            new_date_of_join_entry.insert(0, employee[6])
+            new_designation_entry.insert(0, employee[8])
+            new_email_entry.insert(0, employee[9])
+            new_salary_entry.insert(0, employee[10])
+            new_password_entry.insert(0, employee[11])
+
+        else:
+            info_label.config(text=f"Employee with ID {employee_id} not found in the database.")
+
+    except ValueError:
+        info_label.config(text="Invalid input. Please enter a valid Employee ID.")
+
+    except Exception as e:
+        info_label.config(text=f"An error occurred: {e}")
+
+
+# Function to update employee information in the database
+def update_info_in_database(employee_id, new_first_name, new_last_name, new_dob, new_address, new_contact_number,
+                            new_date_of_join, new_designation, new_email, new_salary, new_password, info_label, conn):
+    cursor = conn.cursor()
+    try:
+        cursor.execute(
+            "UPDATE employees SET first_name = ?, last_name = ?, dob = ?, address = ?, contact_number = ?, date_of_join = ?, designation = ?, email = ?, salary = ?, password = ? WHERE employee_id = ?",
+            (new_first_name, new_last_name, new_dob, new_address, new_contact_number, new_date_of_join,
+             new_designation, new_email, new_salary, new_password, employee_id))
+        conn.commit()
+        info_label.config(text="Employee information updated successfully.")
+    except sqlite3.Error as e:
+        conn.rollback()  # Rollback the transaction
+        info_label.config(text=f"Error updating employee information: {str(e)}")
