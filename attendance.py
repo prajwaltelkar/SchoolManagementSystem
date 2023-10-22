@@ -175,7 +175,8 @@ class AttendanceViewer:
             selected_class = self.class_var.get()
             selected_date = self.date_var.get()
 
-            class_id = self.cursor.execute("SELECT class_id FROM class WHERE class_name=?", (selected_class,)).fetchone()[0]
+            class_id = \
+            self.cursor.execute("SELECT class_id FROM class WHERE class_name=?", (selected_class,)).fetchone()[0]
             attendance_data = self.cursor.execute(
                 "SELECT students.first_name, students.last_name, attendance.status FROM students JOIN attendance ON students.student_id = attendance.student_id WHERE students.class_id=? AND attendance.date=?",
                 (class_id, selected_date)).fetchall()
@@ -294,3 +295,83 @@ def delete_all_attendance_records(conn):
                 messagebox.showerror("Error", str(error))
         else:
             messagebox.showerror("Deletion Canceled", "No Attendance records have been deleted.")
+
+
+# Function to update attendance information in a pop-up window
+def update_attendance_record(conn):
+    update_attendance_window = tk.Toplevel()
+    update_attendance_window.title("Update Attendance")
+
+    # Student ID and Date input fields
+    student_id_label = tk.Label(update_attendance_window, text="Enter Student ID:")
+    date_label = tk.Label(update_attendance_window, text="Enter Date (dd-mm-yyyy):")
+    student_id_label.grid(row=0, column=0)
+    date_label.grid(row=1, column=0)
+    student_id_entry = tk.Entry(update_attendance_window)
+    date_entry = tk.Entry(update_attendance_window)
+    student_id_entry.grid(row=0, column=1)
+    date_entry.grid(row=1, column=1)
+    get_info_button = tk.Button(update_attendance_window, text="Get Attendance Info",
+                                command=lambda: update_attendance_info(conn, student_id_entry, date_entry))
+    get_info_button.grid(row=0, column=2, columnspan=2)
+
+
+def update_attendance_info(conn, student_id_entry, date_entry):
+    try:
+        # Get the student ID and date from the user
+        student_id = int(student_id_entry.get())
+        date = date_entry.get()
+
+        # Check if the student ID exists in the database
+        cursor = conn.cursor()
+        cursor.execute("SELECT * FROM students WHERE student_id = ?", (student_id,))
+        student_data = cursor.fetchone()
+
+        if student_data:
+            # Create a separate pop-up window for displaying and updating the current information
+            current_info_window = tk.Toplevel()
+            current_info_window.title(f"Update Attendance Information (Student ID {student_id}, Date {date})")
+
+            # Labels (keys) next to the white space for updated information
+            status_label = tk.Label(current_info_window, text="Attendance Status:")
+            status_label.grid(row=0, column=0, sticky='e')
+
+            # Entry field for updated information
+            new_status_entry = tk.Entry(current_info_window, width=30)
+            new_status_entry.grid(row=0, column=1, pady=5)
+
+            # Update button in the pop-up window
+            update_button = tk.Button(current_info_window, text="Update Information",
+                                      command=lambda: [
+                                          update_attendance_info_in_database(student_id, date, new_status_entry.get(), conn),
+                                          current_info_window.destroy()])  # Close the window
+            update_button.grid(row=1, column=0, columnspan=2, pady=10)
+
+            # Populate the input field with the current information
+            cursor.execute("SELECT status FROM attendance WHERE student_id = ? AND date = ?", (student_id, date))
+            current_status = cursor.fetchone()
+            if current_status:
+                new_status_entry.insert(0, current_status[0])
+
+        else:
+            messagebox.showerror("Error", "Student with given ID not found in the database.")
+
+    except ValueError:
+        messagebox.showerror("Invalid input", "Please enter valid Student ID and Date.")
+
+    except Exception as e:
+        messagebox.showerror("Error", f"An error occurred: {e}")
+
+
+# Function to update attendance information in the database
+def update_attendance_info_in_database(student_id, date, new_status, conn):
+    cursor = conn.cursor()
+    try:
+        cursor.execute(
+            "UPDATE attendance SET status = ? WHERE student_id = ? AND date = ?",
+            (new_status, student_id, date))
+        conn.commit()
+        messagebox.showinfo("Success", "Attendance information updated successfully")
+    except sqlite3.Error as e:
+        conn.rollback()  # Rollback the transaction
+        messagebox.showerror("Error", f"Error updating attendance information: {str(e)}")
