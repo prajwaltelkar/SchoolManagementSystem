@@ -273,7 +273,7 @@ def display_employee_notices(employee_id):
 
 
 # Function to update employee information
-def window_for_update_employee_record(conn):
+def update_employee_record(conn):
     # Create a new window for employee registration
     update_employee_window = tk.Toplevel()
     update_employee_window.title("Update Employee Details")

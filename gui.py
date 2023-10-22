@@ -5,12 +5,13 @@ from tkinter import messagebox
 from PIL import ImageTk, Image
 from student import (Student, show_student_records, delete_all_student_records, display_student_grades,
                      display_student_courses, display_student_class_and_students, display_student_fee_report,
-                     display_student_attendance_report, view_report, display_student_notices, delete_student)
+                     display_student_attendance_report, view_report, display_student_notices, delete_student,
+                     update_student_record)
 from classroom import ClassRoom, show_class_records, delete_all_class_records, delete_class
 from course import Course, show_course_records, delete_all_course_records, delete_course
 from employee import (Employee, show_employee_records, delete_all_employee_records, display_employee_notices,
                       authenticate_teacher, authenticate_non_teacher, delete_employee,
-                      window_for_update_employee_record)
+                      update_employee_record)
 from fee import Fee, show_fee_records, delete_all_fee_records, delete_fee
 from notice import (StudentNotice, EmployeeNotice, show_student_notice_records, delete_all_student_notice_records,
                     show_employee_notice_records, delete_all_employee_notice_records, delete_student_notice_record,
@@ -198,7 +199,7 @@ class LoginPage:
         employee_buttons = [
             ("Register Employee", lambda: Employee(self.conn)),
             ("Show Employee Records", show_employee_records),
-            ("Update Employee Records", lambda: window_for_update_employee_record(self.conn)),
+            ("Update Employee Records", lambda: update_employee_record(self.conn)),
             ("Delete Employee", lambda: delete_employee(self.conn)),
             ("Delete All Employee\nRecords", lambda: delete_all_employee_records(self.conn))
         ]
@@ -227,6 +228,7 @@ class LoginPage:
         student_buttons = [
             ("Register Student", lambda: Student(self.conn)),
             ("Show Student Records", show_student_records),
+            ("Update Student Records", lambda: update_student_record(self.conn)),
             ("Delete Student", lambda: delete_student(self.conn)),
             ("Delete All Student\nRecords", lambda: delete_all_student_records(self.conn))
         ]
