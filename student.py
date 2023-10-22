@@ -506,7 +506,8 @@ def fetch_student_grade_report(student_id):
     return grade_report, total_marks, total_percentage
 
 
-def generate_pdf_report(student_name, student_id, attendance_percentage, grade_report, total_marks, total_percentage):
+def generate_pdf_report(student_name, student_id, class_id, attendance_percentage, grade_report, total_marks,
+                        total_percentage):
     try:
         # Create the PDF filename using the provided student_name
         pdf_filename = fr"C:\Users\Prajwal\Downloads\{student_name}_report.pdf".replace(" ", "_")
@@ -540,7 +541,7 @@ def generate_pdf_report(student_name, student_id, attendance_percentage, grade_r
 
         # Define header and footer content
         def header(canvas, doc):
-            canvas.setFont('Helvetica', 12)
+            canvas.setFont('Helvetica-Bold', 12)
             canvas.drawString(doc.width - 250, doc.height + 80, "Prajwal S Telkar International School")
             canvas.drawString(doc.width - 200, doc.height + 50, "ICSE Bengaluru")
             canvas.drawString(doc.width - 200, doc.height + 20, "Student Report")
@@ -548,7 +549,7 @@ def generate_pdf_report(student_name, student_id, attendance_percentage, grade_r
 
         def footer(canvas, doc):
             canvas.setFont('Helvetica', 10)
-            canvas.drawString(36, 36, f"Report Generation Time: {generation_time}")
+            canvas.drawString(36, 36, f"<b>Report Generation Time:</b> {generation_time}")
             canvas.drawString(doc.width - 200, 50, "End")
             # Add any other footer elements as needed
 
@@ -557,28 +558,41 @@ def generate_pdf_report(student_name, student_id, attendance_percentage, grade_r
         doc.addPageTemplates([template])
 
         # Add the student name
-        stud_name_text = f"Student Name: {student_name}"
+        stud_name_text = f"<b>Student Name:</b> {student_name}"
         stud_name_paragraph = Paragraph(stud_name_text, normal_style)
         elements.append(stud_name_paragraph)
         elements.append(Spacer(1, 12))
 
         # Add the student id
-        stud_id_text = f"Student ID: {student_id}"
+        stud_id_text = f"<b>Student ID:</b> {student_id}"
         stud_id_paragraph = Paragraph(stud_id_text, normal_style)
         elements.append(stud_id_paragraph)
         elements.append(Spacer(1, 12))
 
+        # Add the class id
+        class_id_text = f"<b>Class ID:</b> {class_id}"
+        class_id_paragraph = Paragraph(class_id_text, normal_style)
+        elements.append(class_id_paragraph)
+        elements.append(Spacer(1, 12))
+
         # Add the attendance percentage
-        attendance_text = f"Attendance Percentage: {attendance_percentage:.1f}%"
+        attendance_text = f"<b>Attendance Percentage:</b> {attendance_percentage:.1f}%"
         attendance_paragraph = Paragraph(attendance_text, normal_style)
         elements.append(attendance_paragraph)
         elements.append(Spacer(1, 12))
 
         # Add the grade report table
-        grade_report_text = f"Marks Report:"
+        grade_report_text = f"<b>Marks Report:</b>"
         grade_report_paragraph = Paragraph(grade_report_text, normal_style)
         elements.append(grade_report_paragraph)
         elements.append(Spacer(1, 12))
+
+        effort_text = (f"   Prajwal S Telkar International School is proud to recognize the exceptional efforts"
+                       f" and achievements of our student <b>{student_name}</b> during this academic year.")
+        effort_paragraph = Paragraph(effort_text, normal_style)
+        elements.append(effort_paragraph)
+        elements.append(Spacer(1, 12))
+
         grade_data = [["Course", "Marks", "Grade"]]
         for course, marks, grade in grade_report:
             grade_data.append([course, str(marks), grade])
@@ -589,12 +603,20 @@ def generate_pdf_report(student_name, student_id, attendance_percentage, grade_r
         elements.append(Spacer(1, 12))
 
         # Add total marks and total percentage
-        total_marks_text = f"Total Marks: {total_marks} out of {len(grade_report) * 100}"
-        total_percentage_text = f"Total Percentage: {total_percentage:.1f}%"
+        total_marks_text = f"<b>Total Marks:</b> {total_marks} out of {len(grade_report) * 100}"
+        total_percentage_text = f"<b>Total Percentage:</b> {total_percentage:.1f}%"
         total_marks_paragraph = Paragraph(total_marks_text, normal_style)
         total_percentage_paragraph = Paragraph(total_percentage_text, normal_style)
         elements.append(total_marks_paragraph)
         elements.append(total_percentage_paragraph)
+
+        # Closure Note
+        closure_text = ("We look forward to continued success and growth, and we extend our appreciation to"
+                        " both our students and their supportive families for their ongoing commitment to"
+                        " excellence.")
+        closure_paragraph = Paragraph(closure_text, normal_style)
+        elements.append(Spacer(1, 12))
+        elements.append(closure_paragraph)
 
         # Add "All the best" centered
         all_the_best_text = "<b>All the best</b>"
@@ -612,21 +634,21 @@ def generate_pdf_report(student_name, student_id, attendance_percentage, grade_r
 
 
 def view_report(student_id):
-    global student_name
+    global student_name, class_id
     if student_id is not None:
         attendance_percentage = fetch_student_total_attendance_percentage(student_id)
         grade_report, total_marks, total_percentage = fetch_student_grade_report(student_id)
         conn = sqlite3.connect("school_database.db")
         cursor = conn.cursor()
-        cursor.execute("SELECT first_name, last_name FROM students WHERE student_id=?", (student_id,))
+        cursor.execute("SELECT first_name, last_name, class_id FROM students WHERE student_id=?", (student_id,))
         student_data = cursor.fetchone()
         try:
-            first_name, last_name = student_data
+            first_name, last_name, class_id = student_data
             student_name = f"{first_name} {last_name}"
         except Exception as e:
             messagebox.showerror("Error", f"No Student Data: {str(e)}")
 
         # Close the database connection
         conn.close()
-        generate_pdf_report(student_name, student_id, attendance_percentage, grade_report, total_marks,
+        generate_pdf_report(student_name, student_id, class_id, attendance_percentage, grade_report, total_marks,
                             total_percentage)
