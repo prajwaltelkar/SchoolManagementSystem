@@ -138,3 +138,75 @@ def delete_all_class_records(conn):
                 messagebox.showerror("Error", str(error))
         else:
             messagebox.showerror("Deletion Canceled", "No Course records have been deleted.")
+
+
+# Function to update class information in a pop-up window
+def update_class_records(conn):
+    update_class_window = tk.Toplevel()
+    update_class_window.title("Update Class Details")
+
+    # Class ID input field
+    class_id_label = tk.Label(update_class_window, text="Enter Class ID:")
+    class_id_label.grid(row=0, column=0)
+    class_id_entry = tk.Entry(update_class_window)
+    class_id_entry.grid(row=0, column=1)
+    get_info_button = tk.Button(update_class_window, text="Get Class Info",
+                                command=lambda: update_class_info(conn, class_id_entry))
+    get_info_button.grid(row=0, column=2)
+
+
+def update_class_info(conn, class_id_entry):
+    try:
+        # Get the class ID from the user
+        class_id = int(class_id_entry.get())
+
+        # Check if the class ID exists in the database
+        cursor = conn.cursor()
+        cursor.execute("SELECT * FROM class WHERE class_id = ?", (class_id,))
+        class_data = cursor.fetchone()
+
+        if class_data:
+            # Create a separate pop-up window for displaying and updating the current information
+            current_info_window = tk.Toplevel()
+            current_info_window.title(f"Update Information for Class ID {class_id}")
+
+            # Labels (keys) next to the white space for updated information
+            class_name_label = tk.Label(current_info_window, text="Class Name:")
+            class_name_label.grid(row=0, column=0, sticky='e')
+
+            # Entry field for updated information
+            new_class_name_entry = tk.Entry(current_info_window, width=30)
+            new_class_name_entry.grid(row=0, column=1, pady=5)
+
+            # Update button in the pop-up window
+            update_button = tk.Button(current_info_window, text="Update Information",
+                                      command=lambda: [
+                                          update_class_info_in_database(class_id, new_class_name_entry.get(), conn),
+                                          current_info_window.destroy()])  # Close the window
+            update_button.grid(row=1, column=0, columnspan=2, pady=10)
+
+            # Populate the input field with the current information
+            new_class_name_entry.insert(0, class_data[1])
+
+        else:
+            messagebox.showerror("Error", f"Class with ID {class_id} not found in the database.")
+
+    except ValueError:
+        messagebox.showerror("Invalid input", "Please enter a valid Class ID.")
+
+    except Exception as e:
+        messagebox.showerror("Error", f"An error occurred: {e}")
+
+
+# Function to update class information in the database
+def update_class_info_in_database(class_id, new_class_name, conn):
+    cursor = conn.cursor()
+    try:
+        cursor.execute(
+            "UPDATE class SET class_name = ? WHERE class_id = ?",
+            (new_class_name, class_id))
+        conn.commit()
+        messagebox.showinfo("Success", "Class information updated successfully")
+    except sqlite3.Error as e:
+        conn.rollback()  # Rollback the transaction
+        messagebox.showerror("Error", f"Error updating class information: {str(e)}")
