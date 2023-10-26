@@ -63,12 +63,11 @@ class StudentNotice:
 
 def show_student_notice_records():
     # Create a new window for displaying records
-    student_notice_records_window = tk.Toplevel()
+    student_notice_records_window = tk.Tk()
     student_notice_records_window.title("Student Notice Database")
 
     # Create a treeview widget to display records
-    tree = ttk.Treeview(student_notice_records_window, columns=("Notice ID", "Student ID", "Title", "Content",
-                                                                "Published Date"))
+    tree = ttk.Treeview(student_notice_records_window, columns=("Notice ID", "Student ID", "Title", "Content", "Published Date"))
     tree.heading("#0", text="Student Notice Record")
     tree.heading("#1", text="Notice ID")
     tree.heading("#2", text="Student ID")
@@ -76,30 +75,42 @@ def show_student_notice_records():
     tree.heading("#4", text="Content")
     tree.heading("#5", text="Published Date")
 
-    # Create horizontal scrollbar
-    xscroll = ttk.Scrollbar(student_notice_records_window, orient=tk.HORIZONTAL, command=tree.xview)
-    xscroll.pack(side=tk.BOTTOM, fill=tk.X)
-    tree.configure(xscrollcommand=xscroll.set)
+    # Establish a connection to the database
+    conn = sqlite3.connect("school_database.db")
+    cursor = conn.cursor()
 
-    # Fetch student records from the database
-    try:
-        conn = sqlite3.connect("school_database.db")
-        cursor = conn.cursor()
-        cursor.execute("SELECT * FROM student_notice")
-        student_records = cursor.fetchall()
-        conn.close()
+    # Fetch student notice records from the database
+    cursor.execute("SELECT * FROM student_notice")
+    student_records = cursor.fetchall()
 
-        # Insert student records into the treeview
-        for record in student_records:
-            tree.insert("", "end", values=record)
+    # Insert student notice records into the treeview
+    for record in student_records:
+        tree.insert("", "end", values=record)
 
-        # Adjust column widths based on content
-        for col in tree["columns"]:
-            tree.column(col, width=tkfont.Font().measure(col) + 10)  # Adjust the width as needed
+    # Adjust column widths based on content
+    for col in tree["columns"]:
+        tree.column(col, width=200)  # Adjust the width as needed
 
-        tree.pack(fill=tk.BOTH, expand=True)
-    except sqlite3.Error as error:
-        messagebox.showerror("Error", str(error))
+    tree.pack(fill=tk.BOTH, expand=True)
+
+    # Create a text widget for displaying full content
+    text_widget = tk.Text(student_notice_records_window, wrap="word")
+    text_widget.pack(fill=tk.BOTH, expand=True)
+
+    # Bind a click event to display full content in the text widget
+    def display_content(event):
+        item = tree.selection()
+        if item:
+            content = tree.item(item, "values")[3]
+            text_widget.delete("1.0", "end")
+            text_widget.insert("1.0", content)
+
+    tree.bind("<ButtonRelease-1>", display_content)
+
+    # Close the database connection
+    conn.close()
+
+    student_notice_records_window.mainloop()
 
 
 def delete_student_notice_record(conn):
@@ -244,11 +255,12 @@ def show_employee_notice_records():
 
         # Insert Employee records into the treeview
         for record in employee_records:
-            tree.insert("", "end", values=record)
+            formatted_content = record[3].replace("\n", " | ")  # Replace line breaks with a separator
+            tree.insert("", "end", values=(record[0], record[1], record[2], formatted_content, record[4]))
 
         # Adjust column widths based on content
         for col in tree["columns"]:
-            tree.column(col, width=tkfont.Font().measure(col) + 10)  # Adjust the width as needed
+            tree.column(col, width=200)  # Adjust the width as needed
 
         tree.pack(fill=tk.BOTH, expand=True)
     except sqlite3.Error as error:
