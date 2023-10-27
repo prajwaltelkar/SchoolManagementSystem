@@ -157,3 +157,88 @@ def delete_all_course_records(conn):
         else:
             messagebox.showerror("Deletion Canceled", "No Course records have been deleted.")
 
+
+# Function to update course information
+def update_course_record(conn):
+    # Create a new window for course information update
+    update_course_window = tk.Toplevel()
+    update_course_window.title("Update Course Details")
+
+    # Course ID input field
+    course_id_label = tk.Label(update_course_window, text="Enter Course ID:")
+    course_id_label.grid(row=0, column=0)
+    course_id_entry = tk.Entry(update_course_window)
+    course_id_entry.grid(row=0, column=1)
+    get_info_button = tk.Button(update_course_window, text="Get Course Info",
+                                command=lambda: update_course_info(conn, course_id_entry))
+    get_info_button.grid(row=0, column=2)
+
+
+def update_course_info(conn, course_id_entry):
+    try:
+        # Get the course ID from the user
+        course_id = int(course_id_entry.get())
+
+        # Check if the course ID exists in the database
+        cursor = conn.cursor()
+        cursor.execute("SELECT * FROM course WHERE course_id = ?", (course_id,))
+        course = cursor.fetchone()
+
+        if course:
+            # Create a separate pop-up window for displaying and updating the current information
+            current_info_window = tk.Toplevel()
+            current_info_window.title(f"Update Information for Course ID {course_id}")
+
+            # Labels (keys) next to the white space for updated information
+            course_name_label = tk.Label(current_info_window, text="Course Name:")
+            course_description_label = tk.Label(current_info_window, text="Course Description:")
+            employee_id_label = tk.Label(current_info_window, text="Employee ID:")
+
+            course_name_label.grid(row=0, column=0, sticky='e')
+            course_description_label.grid(row=1, column=0, sticky='e')
+            employee_id_label.grid(row=2, column=0, sticky='e')
+
+            # Entry fields for updated information
+            new_course_name_entry = tk.Entry(current_info_window, width=30)
+            new_course_description_entry = tk.Entry(current_info_window, width=30)
+            new_employee_id_entry = tk.Entry(current_info_window, width=30)
+
+            new_course_name_entry.grid(row=0, column=1, pady=5)
+            new_course_description_entry.grid(row=1, column=1, pady=5)
+            new_employee_id_entry.grid(row=2, column=1, pady=5)
+
+            # Update button in the pop-up window
+            update_button = tk.Button(current_info_window, text="Update Information",
+                                      command=lambda: [update_course_info_in_database(course_id, new_course_name_entry.get(),
+                                                                               new_course_description_entry.get(),
+                                                                               new_employee_id_entry.get(), conn),
+                                                       current_info_window.destroy()])  # Close the window
+            update_button.grid(row=3, column=0, columnspan=2, pady=10)
+
+            # Populate the input fields with the current information
+            new_course_name_entry.insert(0, course[1])
+            new_course_description_entry.insert(0, course[2])
+            new_employee_id_entry.insert(0, course[3])
+
+        else:
+            messagebox.showerror("Error", f"Course with ID {course_id} not found in the database.")
+
+    except ValueError:
+        messagebox.showerror("Invalid input", "Please enter a valid Course ID.")
+
+    except Exception as e:
+        messagebox.showerror("Error", f"An error occurred: {e}")
+
+
+# Function to update course information in the database
+def update_course_info_in_database(course_id, new_course_name, new_course_description, new_employee_id, conn):
+    cursor = conn.cursor()
+    try:
+        cursor.execute(
+            "UPDATE course SET course_name = ?, course_description = ?, employee_id = ? WHERE course_id = ?",
+            (new_course_name, new_course_description, new_employee_id, course_id))
+        conn.commit()
+        messagebox.showinfo("Success", "Course information updated successfully")
+    except sqlite3.Error as e:
+        conn.rollback()  # Rollback the transaction
+        messagebox.showerror("Error", f"Error updating course information: {str(e)}")
