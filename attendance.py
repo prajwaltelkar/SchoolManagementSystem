@@ -205,7 +205,7 @@ class AttendanceViewer:
 def show_attendance_records():
     # Create a new window for displaying records
     attendance_records_window = tk.Toplevel()
-    attendance_records_window.title("Student Notice Database")
+    attendance_records_window.title("Attendance Database")
 
     # Create a treeview widget to display records
     tree = ttk.Treeview(attendance_records_window, columns=("Student ID", "Date", "Status"))

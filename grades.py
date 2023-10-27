@@ -242,3 +242,92 @@ def delete_all_grades_records():
         cursor.execute("DELETE FROM grades")
         conn.commit()
         messagebox.showinfo("Deletion Successful", "All grade records have been deleted.")
+
+
+# Function to update grades information in a pop-up window
+def update_grades_records(conn):
+    update_grades_window = tk.Toplevel()
+    update_grades_window.title("Update Grades")
+
+    # Student ID and Course ID input fields
+    student_id_label = tk.Label(update_grades_window, text="Enter Student ID:")
+    course_id_label = tk.Label(update_grades_window, text="Enter Course ID:")
+    student_id_label.grid(row=0, column=0)
+    course_id_label.grid(row=1, column=0)
+    student_id_entry = tk.Entry(update_grades_window)
+    course_id_entry = tk.Entry(update_grades_window)
+    student_id_entry.grid(row=0, column=1)
+    course_id_entry.grid(row=1, column=1)
+    get_info_button = tk.Button(update_grades_window, text="Get Grades Info",
+                                command=lambda: update_grades_info(conn, student_id_entry, course_id_entry))
+    get_info_button.grid(row=0, column=2, columnspan=2)
+
+
+def update_grades_info(conn, student_id_entry, course_id_entry):
+    try:
+        # Get the student ID and course ID from the user
+        student_id = int(student_id_entry.get())
+        course_id = int(course_id_entry.get())
+
+        # Check if the student and course IDs exist in the database
+        cursor = conn.cursor()
+        cursor.execute("SELECT * FROM students WHERE student_id = ?", (student_id,))
+        student_data = cursor.fetchone()
+        cursor.execute("SELECT * FROM course WHERE course_id = ?", (course_id,))
+        course_data = cursor.fetchone()
+
+        if student_data and course_data:
+            # Create a separate pop-up window for displaying and updating the current information
+            current_info_window = tk.Toplevel()
+            current_info_window.title(f"Update Grades Information (Student ID {student_id}, Course ID {course_id})")
+
+            # Labels (keys) next to the white space for updated information
+            marks_label = tk.Label(current_info_window, text="Marks:")
+            grade_label = tk.Label(current_info_window, text="Grade:")
+            marks_label.grid(row=0, column=0, sticky='e')
+            grade_label.grid(row=1, column=0, sticky='e')
+
+            # Entry fields for updated information
+            new_marks_entry = tk.Entry(current_info_window, width=30)
+            new_grade_entry = tk.Entry(current_info_window, width=30)
+            new_marks_entry.grid(row=0, column=1, pady=5)
+            new_grade_entry.grid(row=1, column=1, pady=5)
+
+            # Update button in the pop-up window
+            update_button = tk.Button(current_info_window, text="Update Information",
+                                      command=lambda: [
+                                          update_grades_info_in_database(student_id, course_id, new_marks_entry.get(),
+                                                                  new_grade_entry.get(), conn),
+                                          current_info_window.destroy()])  # Close the window
+            update_button.grid(row=2, column=0, columnspan=2, pady=10)
+
+            # Populate the input fields with the current information
+            cursor.execute("SELECT marks, grade FROM grades WHERE student_id = ? AND course_id = ?",
+                           (student_id, course_id))
+            current_grades = cursor.fetchone()
+            if current_grades:
+                new_marks_entry.insert(0, current_grades[0])
+                new_grade_entry.insert(0, current_grades[1])
+
+        else:
+            messagebox.showerror("Error", "Student or Course not found in the database.")
+
+    except ValueError:
+        messagebox.showerror("Invalid input", "Please enter valid Student and Course IDs.")
+
+    except Exception as e:
+        messagebox.showerror("Error", f"An error occurred: {e}")
+
+
+# Function to update grades information in the database
+def update_grades_info_in_database(student_id, course_id, new_marks, new_grade, conn):
+    cursor = conn.cursor()
+    try:
+        cursor.execute(
+            "UPDATE grades SET marks = ?, grade = ? WHERE student_id = ? AND course_id = ?",
+            (new_marks, new_grade, student_id, course_id))
+        conn.commit()
+        messagebox.showinfo("Success", "Grades information updated successfully")
+    except sqlite3.Error as e:
+        conn.rollback()  # Rollback the transaction
+        messagebox.showerror("Error", f"Error updating grades information: {str(e)}")
