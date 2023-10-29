@@ -315,3 +315,93 @@ def delete_employee_class_record(conn):
 
     # Close the Tkinter window
     employee_class_window.destroy()
+
+
+# Function to update class_courses information in a pop-up window
+def update_class_courses_records(conn):
+    update_class_courses_window = tk.Toplevel()
+    update_class_courses_window.title("Update Class Courses")
+
+    # Class ID and Course ID input fields
+    class_id_label = tk.Label(update_class_courses_window, text="Enter Class ID:")
+    course_id_label = tk.Label(update_class_courses_window, text="Enter Course ID:")
+    class_id_label.grid(row=0, column=0)
+    course_id_label.grid(row=1, column=0)
+    class_id_entry = tk.Entry(update_class_courses_window)
+    course_id_entry = tk.Entry(update_class_courses_window)
+    class_id_entry.grid(row=0, column=1)
+    course_id_entry.grid(row=1, column=1)
+    get_info_button = tk.Button(update_class_courses_window, text="Get Class Courses Info",
+                                command=lambda: update_class_courses_info(conn, class_id_entry, course_id_entry))
+    get_info_button.grid(row=0, column=2, columnspan=2)
+
+
+def update_class_courses_info(conn, class_id_entry, course_id_entry):
+    try:
+        # Get the class ID and course ID from the user
+        class_id = int(class_id_entry.get())
+        course_id = int(course_id_entry.get())
+
+        # Check if the class and course IDs exist in the database
+        cursor = conn.cursor()
+        cursor.execute("SELECT * FROM class WHERE class_id = ?", (class_id,))
+        class_data = cursor.fetchone()
+        cursor.execute("SELECT * FROM course WHERE course_id = ?", (course_id,))
+        course_data = cursor.fetchone()
+
+        if class_data and course_data:
+            # Create a separate pop-up window for displaying and updating the current information
+            current_info_window = tk.Toplevel()
+            current_info_window.title(f"Update Class Courses Information (Class ID {class_id}, Course ID {course_id})")
+
+            # Labels (keys) next to the white space for updated information
+            # You can add more fields as needed for the class_courses table
+            label1 = tk.Label(current_info_window, text="Class ID:")
+            label2 = tk.Label(current_info_window, text="Course ID:")
+            label1.grid(row=0, column=0, sticky='e')
+            label2.grid(row=1, column=0, sticky='e')
+
+            # Entry fields for updated information
+            entry1 = tk.Entry(current_info_window, width=30)
+            entry2 = tk.Entry(current_info_window, width=30)
+            entry1.grid(row=0, column=1, pady=5)
+            entry2.grid(row=1, column=1, pady=5)
+
+            # Update button in the pop-up window
+            update_button = tk.Button(current_info_window, text="Update Information",
+                                      command=lambda: [
+                                          update_class_courses_info_in_database(class_id, course_id, entry1.get(),
+                                                                                entry2.get(), conn),
+                                          current_info_window.destroy()])  # Close the window
+            update_button.grid(row=2, column=0, columnspan=2, pady=10)
+
+            # Populate the input fields with the current information
+            cursor.execute("SELECT class_id, course_id FROM class_courses WHERE class_id = ? AND course_id = ?",
+                           (class_id, course_id))
+            current_info = cursor.fetchone()
+            if current_info:
+                entry1.insert(0, current_info[0])
+                entry2.insert(0, current_info[1])
+
+        else:
+            messagebox.showerror("Error", "Class or Course not found in the database.")
+
+    except ValueError:
+        messagebox.showerror("Invalid input", "Please enter valid Class and Course IDs.")
+
+    except Exception as e:
+        messagebox.showerror("Error", f"An error occurred: {e}")
+
+
+# Function to update class_courses information in the database
+def update_class_courses_info_in_database(class_id, course_id, field1, field2, conn):
+    cursor = conn.cursor()
+    try:
+        cursor.execute(
+            "UPDATE class_courses SET class_id = ?, course_id = ? WHERE class_id = ? AND course_id = ?",
+            (field1, field2, class_id, course_id))
+        conn.commit()
+        messagebox.showinfo("Success", "Class Courses information updated successfully")
+    except sqlite3.Error as e:
+        conn.rollback()  # Rollback the transaction
+        messagebox.showerror("Error", f"Error updating class_courses information: {str(e)}")

@@ -561,7 +561,6 @@ def generate_pdf_report(student_name, student_id, class_id, attendance_percentag
         stud_name_text = f"<b>Student Name:</b> {student_name}"
         stud_name_paragraph = Paragraph(stud_name_text, normal_style)
         elements.append(stud_name_paragraph)
-        elements.append(Spacer(1, 12))
 
         # Add the student id
         stud_id_text = f"<b>Student ID:</b> {student_id}"
@@ -570,9 +569,17 @@ def generate_pdf_report(student_name, student_id, class_id, attendance_percentag
         elements.append(Spacer(1, 12))
 
         # Add the class id
+        conn = sqlite3.connect("school_database.db")
+        cursor = conn.cursor()
+        cursor.execute("SELECT class_name FROM class WHERE class_id = ?", (class_id,))
+        class_name = cursor.fetchone()
+        conn.close()
         class_id_text = f"<b>Class ID:</b> {class_id}"
+        class_name_text = f"<b>Class:</b> {class_name[0]}"
         class_id_paragraph = Paragraph(class_id_text, normal_style)
         elements.append(class_id_paragraph)
+        class_name_paragraph = Paragraph(class_name_text, normal_style)
+        elements.append(class_name_paragraph)
         elements.append(Spacer(1, 12))
 
         # Add the attendance percentage
@@ -666,25 +673,21 @@ def update_student_record(conn):
     student_id_entry = tk.Entry(update_student_window)
     student_id_entry.grid(row=0, column=1)
     get_info_button = tk.Button(update_student_window, text="Get Student Info",
-                                command=lambda: update_student_info(conn, student_id_entry, info_label))
+                                command=lambda: update_student_info(conn, student_id_entry.get()))
     get_info_button.grid(row=0, column=2)
 
-    # Information label
-    info_label = tk.Label(update_student_window, text="")
-    info_label.grid(row=1, column=0, columnspan=2)
 
-
-def update_student_info(conn, student_id_entry, info_label):
+def update_student_info(conn, student_id_entry, student_login=False):
     try:
         # Get the student ID from the user
-        student_id = int(student_id_entry.get())
+        student_id = student_id_entry
 
         # Check if the student ID exists in the database
         cursor = conn.cursor()
         cursor.execute("SELECT * FROM students WHERE student_id = ?", (student_id,))
         student = cursor.fetchone()
 
-        if student:
+        if student and not student_login:
             # Create a separate pop-up window for displaying and updating the current information
             current_info_window = tk.Toplevel()
             current_info_window.title(f"Update Information for student ID {student_id}")
@@ -757,7 +760,6 @@ def update_student_info(conn, student_id_entry, info_label):
                                                                                new_email_entry.get(),
                                                                                new_password_entry.get(),
                                                                                new_class_entry.get(),
-                                                                               info_label,
                                                                                conn),
                                                        current_info_window.destroy()])  # Close the window
             update_button.grid(row=12, column=0, columnspan=2, pady=10)
@@ -776,20 +778,94 @@ def update_student_info(conn, student_id_entry, info_label):
             new_password_entry.insert(0, student[11])
             new_class_entry.insert(0, student[12])
 
+        elif student and student_login:
+            # Create a separate pop-up window for displaying and updating the current information
+            current_info_window = tk.Toplevel()
+            current_info_window.title(f"Update Information for student ID {student_id}")
+
+            # Labels (keys) next to the white space for updated information
+            first_name_label = tk.Label(current_info_window, text="First Name:")
+            last_name_label = tk.Label(current_info_window, text="Last Name:")
+            dob_label = tk.Label(current_info_window, text="Date of Birth (dd-mm-yyyy):")
+            address_label = tk.Label(current_info_window, text="Address:")
+            contact_number_label = tk.Label(current_info_window, text="Contact Number:")
+            father_name_label = tk.Label(current_info_window, text="Father's Name:")
+            mother_name_label = tk.Label(current_info_window, text="Mother's Name:")
+            gender_label = tk.Label(current_info_window, text="Gender:")
+            password_label = tk.Label(current_info_window, text="Password:")
+
+            first_name_label.grid(row=0, column=0, sticky='e')
+            last_name_label.grid(row=1, column=0, sticky='e')
+            dob_label.grid(row=2, column=0, sticky='e')
+            address_label.grid(row=3, column=0, sticky='e')
+            contact_number_label.grid(row=4, column=0, sticky='e')
+            father_name_label.grid(row=5, column=0, sticky='e')
+            mother_name_label.grid(row=6, column=0, sticky='e')
+            gender_label.grid(row=8, column=0, sticky='e')
+            password_label.grid(row=10, column=0, sticky='e')
+
+            # Entry fields for updated information
+            new_first_name_entry = tk.Entry(current_info_window, width=30)
+            new_last_name_entry = tk.Entry(current_info_window, width=30)
+            new_dob_entry = tk.Entry(current_info_window, width=30)
+            new_address_entry = tk.Entry(current_info_window, width=30)
+            new_contact_number_entry = tk.Entry(current_info_window, width=30)
+            new_father_name_entry = tk.Entry(current_info_window, width=30)
+            new_mother_name_entry = tk.Entry(current_info_window, width=30)
+            new_gender_entry = tk.Entry(current_info_window, width=30)
+            new_password_entry = tk.Entry(current_info_window, width=30)
+
+            new_first_name_entry.grid(row=0, column=1, pady=5)
+            new_last_name_entry.grid(row=1, column=1, pady=5)
+            new_dob_entry.grid(row=2, column=1, pady=5)
+            new_address_entry.grid(row=3, column=1, pady=5)
+            new_contact_number_entry.grid(row=4, column=1, pady=5)
+            new_father_name_entry.grid(row=5, column=1, pady=5)
+            new_mother_name_entry.grid(row=6, column=1, pady=5)
+            new_gender_entry.grid(row=8, column=1, pady=5)
+            new_password_entry.grid(row=10, column=1, pady=5)
+
+            # Update button in the pop-up window
+            update_button = tk.Button(current_info_window, text="Update Information",
+                                      command=lambda: [
+                                          student_login_update_database(student_id, new_first_name_entry.get(),
+                                                                        new_last_name_entry.get(),
+                                                                        new_dob_entry.get(),
+                                                                        new_address_entry.get(),
+                                                                        new_contact_number_entry.get(),
+                                                                        new_father_name_entry.get(),
+                                                                        new_mother_name_entry.get(),
+                                                                        new_gender_entry.get(),
+                                                                        new_password_entry.get(),
+                                                                        conn),
+                                          current_info_window.destroy()])  # Close the window
+            update_button.grid(row=12, column=0, columnspan=2, pady=10)
+
+            # Populate the input fields with the current information
+            new_first_name_entry.insert(0, student[1])
+            new_last_name_entry.insert(0, student[2])
+            new_dob_entry.insert(0, student[3])
+            new_address_entry.insert(0, student[4])
+            new_contact_number_entry.insert(0, student[5])
+            new_father_name_entry.insert(0, student[6])
+            new_mother_name_entry.insert(0, student[7])
+            new_gender_entry.insert(0, student[9])
+            new_password_entry.insert(0, student[11])
+
         else:
-            info_label.config(text=f"Student with ID {student_id} not found in the database.")
+            messagebox.showerror("Error", f"Student with ID {student_id} not found in the database.")
 
     except ValueError:
-        info_label.config(text="Invalid input. Please enter a valid Student ID.")
+        messagebox.showerror("Invalid input", "Please enter a valid Student ID.")
 
     except Exception as e:
-        info_label.config(text=f"An error occurred: {e}")
+        messagebox.showerror("Error", f"An error occurred: {e}")
 
 
 # Function to update student information in the database
 def update_info_in_database(student_id, new_first_name, new_last_name, new_dob, new_address, new_contact_number,
                             new_father_name, new_mother_name, new_enrollment_date, new_gender, new_email, new_password,
-                            new_class_id, info_label, conn):
+                            new_class_id, conn):
     cursor = conn.cursor()
     try:
         cursor.execute(
@@ -797,7 +873,22 @@ def update_info_in_database(student_id, new_first_name, new_last_name, new_dob, 
             (new_first_name, new_last_name, new_dob, new_address, new_contact_number, new_father_name,
              new_mother_name, new_enrollment_date, new_gender, new_email, new_password, new_class_id, student_id))
         conn.commit()
-        info_label.config(text="Student information updated successfully.")
+        messagebox.showinfo("Success", "Student information updated successfully.")
     except sqlite3.Error as e:
         conn.rollback()  # Rollback the transaction
-        info_label.config(text=f"Error updating student information: {str(e)}")
+        messagebox.showerror("Error", f"Error updating student information: {str(e)}")
+
+
+def student_login_update_database(student_id, new_first_name, new_last_name, new_dob, new_address, new_contact_number,
+                                  new_father_name, new_mother_name, new_gender, new_password, conn):
+    cursor = conn.cursor()
+    try:
+        cursor.execute(
+            "UPDATE students SET first_name = ?, last_name = ?, dob = ?, address = ?, contact_number = ?, father_name = ?, mother_name = ?, gender = ?, password = ? WHERE student_id = ?",
+            (new_first_name, new_last_name, new_dob, new_address, new_contact_number, new_father_name,
+             new_mother_name, new_gender, new_password, student_id))
+        conn.commit()
+        messagebox.showinfo("Success", "Student information updated successfully.")
+    except sqlite3.Error as e:
+        conn.rollback()  # Rollback the transaction
+        messagebox.showerror("Error", f"Error updating student information: {str(e)}")
