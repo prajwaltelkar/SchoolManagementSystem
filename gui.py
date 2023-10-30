@@ -6,13 +6,13 @@ from PIL import ImageTk, Image
 from student import (Student, show_student_records, delete_all_student_records, display_student_grades,
                      display_student_courses, display_student_class_and_students, display_student_fee_report,
                      display_student_attendance_report, view_report, display_student_notices, delete_student,
-                     update_student_record)
-from classroom import ClassRoom, show_class_records, delete_all_class_records, delete_class
-from course import Course, show_course_records, delete_all_course_records, delete_course
+                     update_student_record, update_student_info)
+from classroom import ClassRoom, show_class_records, delete_all_class_records, delete_class, update_class_records
+from course import Course, show_course_records, delete_all_course_records, delete_course, update_course_record
 from employee import (Employee, show_employee_records, delete_all_employee_records, display_employee_notices,
                       authenticate_teacher, authenticate_non_teacher, delete_employee,
-                      update_employee_record)
-from fee import Fee, show_fee_records, delete_all_fee_records, delete_fee
+                      update_employee_record, update_employee_info)
+from fee import Fee, show_fee_records, delete_all_fee_records, delete_fee, update_fee_records
 from notice import (StudentNotice, EmployeeNotice, show_student_notice_records, delete_all_student_notice_records,
                     show_employee_notice_records, delete_all_employee_notice_records, delete_student_notice_record,
                     delete_employee_notice_record)
@@ -21,11 +21,12 @@ from database_setup import (create_student_notice_table, create_student_table, c
                             create_attendance_table, create_class_courses_table, create_grade_table,
                             create_employee_class_table)
 from attendance import (AttendanceSystem, AttendanceViewer, show_attendance_records, delete_all_attendance_records,
-                        delete_attendance)
+                        delete_attendance, update_attendance_record)
 from common_util import (ClassCourses, show_class_courses_records, delete_all_class_courses_records,
                          authenticate_student, center_window, delete_class_course_record, EmployeeClassAssignment,
                          show_employee_class_records, delete_all_employee_class_records, delete_employee_class_record)
-from grades import StudentGradesViewer, GradeAssignmentApp, show_grades_records, delete_all_grades_records, delete_grade
+from grades import (StudentGradesViewer, GradeAssignmentApp, show_grades_records, delete_all_grades_records,
+                    delete_grade,update_grades_records)
 
 
 class LoginPage:
@@ -34,6 +35,11 @@ class LoginPage:
         self.root = root
         self.root.title("Login")
         center_window(root, 1800, 700)
+        # self.root.geometry("800x400")  # Set an initial size for the window
+
+        # # Configure row and column weights for resizing
+        # root.grid_rowconfigure(1, weight=1)  # Allow the second row to expand
+        # root.grid_columnconfigure(1, weight=1)  # Allow the second column to expand
 
         # Load the image
         self.image = Image.open("images/logo (1).png")
@@ -44,8 +50,8 @@ class LoginPage:
         self.image_label.grid(row=0, column=0, columnspan=1, padx=329, pady=10, sticky="nw")
 
         # Create a label for the institute's name and address (left half)
-        institute_label = tk.Label(root, text="Prajwal S Telkar International School\nMagadi Road, Syndicate"
-                                              " Bank Layout\nBengaluru, India\nICSE\n",
+        institute_label = tk.Label(root, text="Prajwal S Telkar International School,\nSyndicate Bank Layout,"
+                                              " Magadi Road\nBengaluru, India\nICSE\n",
                                    font=("Times", "24", "bold italic"), justify="center", bg="#87CEEB", fg="#00008B")
         institute_label.grid(row=0, column=1, columnspan=2, padx=10, pady=10, sticky="n")
 
@@ -106,7 +112,7 @@ class LoginPage:
         role = self.role_var.get()
 
         # Add your authentication logic here
-        if role == "Admin" and self.username == "" and password == "":
+        if role == "Admin" and self.username == "admin" and password == "admin123":
             # Close the login window
             self.root.withdraw()
             # Open the admin dashboard
@@ -132,6 +138,8 @@ class LoginPage:
                 self.open_staff_page()
             else:
                 messagebox.showerror("Login Failed", "Invalid credentials")
+        else:
+            messagebox.showerror("Login Failed", "Invalid credentials")
 
     def open_admin_page(self):
         create_class_table(self.conn)
@@ -207,6 +215,7 @@ class LoginPage:
         course_buttons = [
             ("Create Course", lambda: Course(self.conn)),
             ("Show Course Records", show_course_records),
+            ("Update Course Records", lambda: update_course_record(self.conn)),
             ("Delete Course Record", lambda: delete_course(self.conn)),
             ("Delete All Course\nRecords", lambda: delete_all_course_records(self.conn))
         ]
@@ -214,6 +223,7 @@ class LoginPage:
         class_buttons = [
             ("Create Class", lambda: ClassRoom(self.conn)),
             ("Show Class Records", show_class_records),
+            ("Update Class Records", lambda: update_class_records(self.conn)),
             ("Delete Class Records", lambda: delete_class(self.conn)),
             ("Delete All Class\nRecords", lambda: delete_all_class_records(self.conn))
         ]
@@ -222,7 +232,8 @@ class LoginPage:
             ("Assign Class Teacher", lambda: EmployeeClassAssignment(self.conn)),
             ("Show Class Teacher\nRecords", show_employee_class_records),
             ("Unassign Class Teacher", lambda: delete_employee_class_record(self.conn)),
-            ("Unassign All Class\nTeacher", lambda: delete_all_employee_class_records(self.conn))
+            ("Unassign All Class\nTeacher", lambda: delete_all_employee_class_records(self.conn)),
+            ("", None)
         ]
 
         student_buttons = [
@@ -234,8 +245,9 @@ class LoginPage:
         ]
 
         fee_buttons = [
-            ("Update Fee Payment\nStatus", lambda: Fee(self.conn)),
+            ("Fee Payment\nRecord", lambda: Fee(self.conn)),
             ("Show Fee Records", show_fee_records),
+            ("Update Fee\nPayment Records", lambda: update_fee_records(self.conn)),
             ("Delete Fee Record", lambda: delete_fee(self.conn)),
             ("Delete All Fee\nRecords", lambda: delete_all_fee_records(self.conn))
         ]
@@ -244,26 +256,30 @@ class LoginPage:
             ("Send Notice to\nStudent", lambda: StudentNotice(self.conn)),
             ("Show Student Notice\nRecords", show_student_notice_records),
             ("Delete Student Notice\nRecord", lambda: delete_student_notice_record(self.conn)),
-            ("Delete All Student\nNotice Records", lambda: delete_all_student_notice_records(self.conn))
+            ("Delete All Student\nNotice Records", lambda: delete_all_student_notice_records(self.conn)),
+            ("", None)
         ]
 
         employee_notice_buttons = [
             ("Send Notice to\nEmployee", lambda: EmployeeNotice(self.conn)),
             ("Show Employee Notice\nRecords", show_employee_notice_records),
             ("Delete Employee Notice\nRecord", lambda: delete_employee_notice_record(self.conn)),
-            ("Delete All Employee\nNotice Records", lambda: delete_all_employee_notice_records(self.conn))
+            ("Delete All Employee\nNotice Records", lambda: delete_all_employee_notice_records(self.conn)),
+            ("", None)
         ]
 
         attendance_buttons = [
             ("Attendance Viewer", AttendanceViewer),
-            ("Show Complete Attendance\nRecords", show_attendance_records),
-            ("Delete attendance record", lambda: delete_attendance(self.conn)),
+            ("Show Complete\nAttendance Records", show_attendance_records),
+            ("Update Attendance\nRecord", lambda: update_attendance_record(self.conn)),
+            ("Delete Attendance\nRecord", lambda: delete_attendance(self.conn)),
             ("Delete All Attendance\nRecords", lambda: delete_all_attendance_records(self.conn))
         ]
 
         grades_buttons = [
             ("Grades Viewer", StudentGradesViewer),
             ("Show Grade Records", show_grades_records),
+            ("Update Grade\nRecord", lambda: update_grades_records(self.conn)),
             ("Delete Grade Record", delete_grade),
             ("Delete All Grade\nRecords", delete_all_grades_records)
         ]
@@ -272,7 +288,8 @@ class LoginPage:
             ("Assign Courses to\nClass", lambda: ClassCourses(self.conn)),
             ("Show Courses to\nClass Assignment", show_class_courses_records),
             ("Delete Courses to\nClass Assignment", lambda: delete_class_course_record(self.conn)),
-            ("Delete All Courses to\nClass Assignment", lambda: delete_all_class_courses_records(self.conn))
+            ("Delete All Courses to\nClass Assignment", lambda: delete_all_class_courses_records(self.conn)),
+            ("", None)
         ]
 
         self.create_buttons(employee_buttons, row_start=5, col_start=0)
@@ -343,6 +360,8 @@ class LoginPage:
                  fg="#00008B").grid(row=3, column=1)
         tk.Label(self.employee_window, text="Notice", font=(font_name, font_size, font_style), bg="#87CEEB",
                  fg="#00008B").grid(row=3, column=2)
+        tk.Label(self.employee_window, text="Profile Management", font=(font_name, font_size, font_style), bg="#87CEEB",
+                 fg="#00008B").grid(row=3, column=3)
 
         # Create buttons for employee actions
         attendance_buttons = [
@@ -359,9 +378,14 @@ class LoginPage:
             ("View Employee Notice", lambda: display_employee_notices(self.username))
         ]
 
+        employee_info_update_buttons = [
+            ("Update Profile", lambda: update_employee_info(self.conn, self.username, True))
+        ]
+
         self.create_employee_buttons(attendance_buttons, row_start=4, col_start=0)
         self.create_employee_buttons(grades_buttons, row_start=4, col_start=1)
         self.create_employee_buttons(employee_notice_buttons, row_start=4, col_start=2)
+        self.create_employee_buttons(employee_info_update_buttons, row_start=4, col_start=3)
 
         logout_button = tk.Button(self.employee_window, text="Logout", command=self.employee_logout, bg="#FDF5E6",
                                   font=("Calibre", 8, "bold"))
@@ -375,7 +399,7 @@ class LoginPage:
     def create_employee_buttons(self, buttons_info, row_start, col_start):
         for i, (text, command) in enumerate(buttons_info):
             button = tk.Button(self.employee_window, text=text, command=command, bg="#FDF5E6",
-                               font=("Calibre", 8, "bold"))
+                               font=("Calibre", 8, "bold"), width=15, height=2)
             button.grid(row=row_start + i, column=col_start, padx=5, pady=5, sticky="nsew")
             self.employee_window.grid_columnconfigure(col_start, weight=1)
 
@@ -411,12 +435,19 @@ class LoginPage:
                  fg="#00008B").grid(row=1, column=0, columnspan=20)
         tk.Label(self.staff_window, text="View Notice", font=(font_name, font_size, font_style), bg="#87CEEB",
                  fg="#00008B").grid(row=3, column=0)
+        tk.Label(self.staff_window, text="Profile Management", font=(font_name, font_size, font_style), bg="#87CEEB",
+                 fg="#00008B").grid(row=3, column=1)
 
         employee_notice_buttons = [
             ("View Employee Notice", lambda: display_employee_notices(self.username))
         ]
 
+        employee_profile_update_buttons = [
+            ("Update Profile", lambda: update_employee_info(self.conn, self.username, True))
+        ]
+
         self.create_staff_buttons(employee_notice_buttons, row_start=4, col_start=0)
+        self.create_staff_buttons(employee_profile_update_buttons, row_start=4, col_start=1)
 
         logout_button = tk.Button(self.staff_window, text="Logout", command=self.staff_logout, bg="#FDF5E6",
                                   font=("Calibre", 8, "bold"))
@@ -429,7 +460,8 @@ class LoginPage:
 
     def create_staff_buttons(self, buttons_info, row_start, col_start):
         for i, (text, command) in enumerate(buttons_info):
-            button = tk.Button(self.staff_window, text=text, command=command, bg="#FDF5E6", font=("Calibre", 8, "bold"))
+            button = tk.Button(self.staff_window, text=text, command=command, bg="#FDF5E6", font=("Calibre", 8, "bold"),
+                               width=15, height=2)
             button.grid(row=row_start + i, column=col_start, padx=5, pady=5, sticky="nsew")
             self.staff_window.grid_columnconfigure(col_start, weight=1)
 
@@ -478,34 +510,40 @@ class LoginPage:
                  fg="#00008B").grid(row=3, column=5)
         tk.Label(self.student_window, text="Report", font=(font_name, font_size, font_style), bg="#87CEEB",
                  fg="#00008B").grid(row=3, column=6)
+        tk.Label(self.student_window, text="Profile\nManagement", font=(font_name, font_size, font_style), bg="#87CEEB",
+                 fg="#00008B").grid(row=3, column=7)
 
-        # Create buttons for admin actions
+        # Create buttons for student actions
         class_buttons = [
-            ("Class Enrolled", lambda: display_student_class_and_students(self.username))
+            ("Class\nEnrolled", lambda: display_student_class_and_students(self.username))
         ]
 
         course_buttons = [
-            ("Courses Enrolled", lambda: display_student_courses(self.username))
+            ("Courses\nEnrolled", lambda: display_student_courses(self.username))
         ]
 
         attendance_buttons = [
-            ("Attendance Viewer", lambda: display_student_attendance_report(self.username))
+            ("Attendance\nViewer", lambda: display_student_attendance_report(self.username))
         ]
 
         student_notice_buttons = [
-            ("Student Notice", lambda: display_student_notices(self.username))
+            ("Student\nNotice", lambda: display_student_notices(self.username))
         ]
 
         fee_buttons = [
-            ("Fee Payment Status", lambda: display_student_fee_report(self.username))
+            ("Fee Payment\nStatus", lambda: display_student_fee_report(self.username))
         ]
 
         grades_buttons = [
-            ("Grades Viewer", lambda: display_student_grades(self.username))
+            ("Grades\nViewer", lambda: display_student_grades(self.username))
         ]
 
         report_buttons = [
-            ("Download Report", lambda: view_report(self.username))
+            ("Download\nReport", lambda: view_report(self.username))
+        ]
+
+        profile_update_buttons = [
+            ("Update\nProfile", lambda: update_student_info(self.conn, self.username, True))
         ]
 
         self.create_student_buttons(class_buttons, row_start=4, col_start=0)
@@ -515,6 +553,7 @@ class LoginPage:
         self.create_student_buttons(fee_buttons, row_start=4, col_start=4)
         self.create_student_buttons(grades_buttons, row_start=4, col_start=5)
         self.create_student_buttons(report_buttons, row_start=4, col_start=6)
+        self.create_student_buttons(profile_update_buttons, row_start=4, col_start=7)
 
         logout_button = tk.Button(self.student_window, text="Logout", command=self.student_logout, bg="#FDF5E6",
                                   font=("Calibre", 8, "bold"))
@@ -528,8 +567,8 @@ class LoginPage:
     def create_student_buttons(self, buttons_info, row_start, col_start):
         for i, (text, command) in enumerate(buttons_info):
             button = tk.Button(self.student_window, text=text, command=command, bg="#FDF5E6",
-                               font=("Calibre", 8, "bold"))
-            button.grid(row=row_start + i, column=col_start, padx=10, pady=10, sticky="nsew")
+                               font=("Calibre", 8, "bold"), width=15, height=2)
+            button.grid(row=row_start + i, column=col_start, padx=15, pady=15, sticky="nsew")
             self.student_window.grid_columnconfigure(col_start, weight=1)
 
     def student_logout(self):
