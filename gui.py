@@ -37,9 +37,9 @@ class LoginPage:
         center_window(root, 1800, 700)
         # self.root.geometry("800x400")  # Set an initial size for the window
 
-        # # Configure row and column weights for resizing
-        # root.grid_rowconfigure(1, weight=1)  # Allow the second row to expand
-        # root.grid_columnconfigure(1, weight=1)  # Allow the second column to expand
+        # Configure row and column weights for resizing
+        root.grid_rowconfigure(1, weight=1)  # Allow the second row to expand
+        root.grid_columnconfigure(1, weight=1)  # Allow the second column to expand
 
         # Load the image
         self.image = Image.open("images/logo (1).png")
